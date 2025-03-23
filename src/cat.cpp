@@ -7,13 +7,13 @@
 #include "throw.h"
 #include "cat.h"
 
-static const std::map<Meter, uint8_t> meterMap = {
-    {METER_SIG, 1},
-    {METER_COMP, 3},
-    {METER_ALC, 4},
-    {METER_PWR, 5},
-    {METER_SWR, 6},
-    {METER_IDD, 7},
+static const std::map<meters::Meter, uint8_t> meterMap = {
+    {meters::METER_SIG, 1},
+    {meters::METER_COMP, 3},
+    {meters::METER_ALC, 4},
+    {meters::METER_PWR, 5},
+    {meters::METER_SWR, 6},
+    {meters::METER_IDD, 7},
 };
 
 static const std::map<Band, uint8_t> bandMap = {
@@ -122,14 +122,14 @@ std::vector<CatEvt> Cat::read()
 			xassert(i->size() == 6, "CAT RM response %s too short", i->c_str());
 
 			const uint8_t meter((*i)[2] - '0');
-			const std::map<Meter, uint8_t>::const_iterator mi(std::find_if(meterMap.begin(), meterMap.end(), [meter](const auto &entry) { return entry.second == meter; }));
+			const std::map<meters::Meter, uint8_t>::const_iterator mi(std::find_if(meterMap.begin(), meterMap.end(), [meter](const auto &entry) { return entry.second == meter; }));
 			xassert(mi != meterMap.end(), "Could not find meter in meter map, CAT response is %s", i->c_str());
 
 			const long value(strtol(i->c_str() + 3, nullptr, 10));
 			xassert(value >= 0 && value <= 255, "Meter value out of range (%ld), CAT response is %s", value, i->c_str());
 
 			CatEvt evt(CatEvt::EVT_METER);
-			evt.meter = std::pair<Meter, uint8_t>(mi->first, value);
+			evt.meter = std::pair<meters::Meter, uint8_t>(mi->first, value);
 			evts.push_back(evt);
 		}
 		else if(code == "FA") {
@@ -174,9 +174,9 @@ std::vector<CatEvt> Cat::read()
 	return evts;
 }
 
-void Cat::getMeter(Meter meter)
+void Cat::getMeter(meters::Meter meter)
 {
-	const std::map<Meter, uint8_t>::const_iterator i(meterMap.find(meter));
+	const std::map<meters::Meter, uint8_t>::const_iterator i(meterMap.find(meter));
 	xassert(i != meterMap.end(), "Could not find meter %d", meter);
 	send("RM%u", i->second);
 	expectEvent(CatEvt::EVT_METER);

@@ -2,18 +2,18 @@
 
 CursesWindow::~CursesWindow()
 {
-	if(wnd) {
-		delwin(wnd);
+	if(win) {
+		delwin(win);
 	}
 }
 
 CursesWindow &CursesWindow::operator=(WINDOW *w)
 {
-	wnd = w;
+	win = w;
 	return *this;
 }
 
 CursesWindow::operator WINDOW *()
 {
-	return wnd;
+	return win;
 }

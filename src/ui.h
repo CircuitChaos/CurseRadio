@@ -5,6 +5,7 @@
 #include <optional>
 #include <map>
 #include "curseswindow.h"
+#include "meters.h"
 #include "defs.h"
 
 struct UiEvt {
@@ -83,7 +84,7 @@ public:
 	UiEvt read();
 	void print(const char *fmt, ...);
 	void printNoNL(const char *fmt, ...);
-	void updateMeters(const std::map<Meter, uint8_t> &meters);
+	void updateMeters(const std::map<meters::Meter, uint8_t> &meters);
 
 private:
 	enum Mode {
@@ -99,7 +100,8 @@ private:
 	bool blockMode{false};
 	bool pendingRefresh{false};
 	std::string pendingText;
-	CursesWindow meters;
+	CursesWindow metersWin;
+	CursesWindow mainWin;
 
 	void setMode(Mode newMode);
 	void help();

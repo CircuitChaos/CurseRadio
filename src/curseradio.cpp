@@ -69,7 +69,7 @@ void CurseRadio::run(const Cli &cli)
 		}
 
 		if(catMeterTimer && util::inSet(outrfds, catMeterTimer->getFd()) && catMeterTimer->read()) {
-			cat->getMeter(METER_IDD);
+			cat->getMeter(meters::METER_IDD);
 		}
 
 		if(catTimeoutTimer && util::inSet(outrfds, catTimeoutTimer->getFd()) && catTimeoutTimer->read()) {
@@ -340,20 +340,20 @@ void CurseRadio::catEvt(const CatEvt &evt)
 			xassert(evt.meter, "Expected meter field not found");
 
 			switch(evt.meter.value().first) {
-				case METER_IDD:
+				case meters::METER_IDD:
 					if(!evt.meter.value().second) {
 						/* If IDD = 0, then we're in RX mode -- only read signal */
-						cat->getMeter(METER_SIG);
+						cat->getMeter(meters::METER_SIG);
 					}
 					else {
 						/* Store IDD and go to ALC -> COMP -> PWR -> SWR */
 						schedMeters[evt.meter.value().first] = evt.meter.value().second;
-						cat->getMeter(METER_ALC);
+						cat->getMeter(meters::METER_ALC);
 					}
 					break;
 
-				case METER_SWR:
-				case METER_SIG:
+				case meters::METER_SWR:
+				case meters::METER_SIG:
 					/* In RX mode only signal is read, in TX reading ends on SWR */
 					schedMeters[evt.meter.value().first] = evt.meter.value().second;
 					ui.updateMeters(schedMeters);
@@ -361,19 +361,19 @@ void CurseRadio::catEvt(const CatEvt &evt)
 					catMeterTimer->start();
 					break;
 
-				case METER_ALC:
+				case meters::METER_ALC:
 					schedMeters[evt.meter.value().first] = evt.meter.value().second;
-					cat->getMeter(METER_COMP);
+					cat->getMeter(meters::METER_COMP);
 					break;
 
-				case METER_COMP:
+				case meters::METER_COMP:
 					schedMeters[evt.meter.value().first] = evt.meter.value().second;
-					cat->getMeter(METER_PWR);
+					cat->getMeter(meters::METER_PWR);
 					break;
 
-				case METER_PWR:
+				case meters::METER_PWR:
 					schedMeters[evt.meter.value().first] = evt.meter.value().second;
-					cat->getMeter(METER_SWR);
+					cat->getMeter(meters::METER_SWR);
 					break;
 
 				default:

@@ -12,6 +12,7 @@
 Ui::Ui()
 {
 	// TODO: handle SIGWINCH somehow
+	// TODO: add freq to meters
 
 	xassert(initscr(), "initscr() call failed");
 	xassert(cbreak() != ERR, "cbreak() call failed");
@@ -19,17 +20,18 @@ Ui::Ui()
 	xassert(nonl() != ERR, "nonl() call failed");
 	xassert(keypad(stdscr, TRUE) != ERR, "keypad() call failed");
 	xassert(nodelay(stdscr, TRUE) != ERR, "nodelay() call failed");
-	xassert(scrollok(stdscr, TRUE) != ERR, "scrollok() call failed");
-	xassert((meters = newwin(5, METERS_WIDTH, 0, COLS - METERS_WIDTH)) != nullptr, "newwin() failed");
-	xassert(box(meters, 0, 0) != ERR, "box() call failed");
-	xassert(wrefresh(meters) != ERR, "wrefresh() call failed"); // TODO don't refresh window here, refresh when meters appear
+	xassert((metersWin = newwin(1, COLS, 0, 0)) != nullptr, "newwin() failed");
+	xassert((mainWin = newwin(LINES - 1, COLS, 1, 0)) != nullptr, "newwin() failed");
+	xassert(scrollok(mainWin, TRUE) != ERR, "scrollok() call failed");
+	xassert(start_color() != ERR, "start_color() call failed");
+	xassert(init_pair(1, COLOR_WHITE, COLOR_BLUE) != ERR, "init_pair() call failed");
+	xassert(wbkgd(metersWin, COLOR_PAIR(1)) != ERR, "wbkgd() call failed");
 	print("Press 'h' for help, 'q' to quit");
 }
 
 Ui::~Ui()
 {
 	print("QRT");
-	delwin(meters);
 	endwin();
 }
 
@@ -50,7 +52,7 @@ void Ui::print(const char *fmt, ...)
 	const std::string s(p);
 	free(p);
 
-	printw("%s\n", s.c_str());
+	xassert(wprintw(mainWin, "%s\n", s.c_str()) != ERR, "wprintw() call failed");
 	maybeRefresh();
 }
 
@@ -66,25 +68,61 @@ void Ui::printNoNL(const char *fmt, ...)
 	const std::string s(p);
 	free(p);
 
-	printw("%s", s.c_str());
+	xassert(wprintw(mainWin, "%s", s.c_str()) != ERR, "wprintw() call failed");
 	maybeRefresh();
 }
 
-void Ui::updateMeters(const std::map<Meter, uint8_t> &meters)
+void Ui::updateMeters(const std::map<meters::Meter, uint8_t> &meters)
 {
-	// TODO move it somewhere (separate window)
-	// TODO print meter name
-	// TODO translate meter names
-	// TODO translate meter values (some Meter class or something)
-	enterBlock();
-	for(std::map<Meter, uint8_t>::const_iterator i(meters.begin()); i != meters.end(); ++i) {
-		// TODO don't spam with S-meter for now
-		if(i->first == METER_SIG) {
-			continue;
-		}
-		print("Meter %d value: %d", i->first, i->second);
+	struct Meter {
+		std::string name;
+		uint8_t raw;
+		std::string text;
+	};
+
+	std::vector<Meter> translatedMeters;
+	unsigned totalLength(0);
+	for(std::map<meters::Meter, uint8_t>::const_iterator i(meters.begin()); i != meters.end(); ++i) {
+		Meter m;
+		m.name = meters::getName(i->first);
+		m.raw  = i->second;
+		m.text = meters::getValue(i->first, i->second);
+		translatedMeters.push_back(m);
+
+		// name [......] text
+		totalLength += m.name.size() + m.text.size() + 4;
 	}
-	leaveBlock();
+
+	totalLength += 3 * (meters.size() - 1); /* Meters separator: " | " */
+
+	const unsigned cols(COLS);
+	xassert(cols > 1, "Screen too narrow");
+	const unsigned lineLength(cols - 1);
+	const unsigned bargraphLength((lineLength - totalLength) / meters.size());
+
+	std::string metersString;
+	for(std::vector<Meter>::const_iterator i(translatedMeters.begin()); i != translatedMeters.end(); ++i) {
+		if(i != translatedMeters.begin()) {
+			metersString += " | ";
+		}
+
+		std::string bargraph;
+		if(bargraphLength > 0) {
+			const unsigned on(i->raw * bargraphLength / 256);
+			const unsigned off(bargraphLength - on);
+			bargraph = std::string(on, '*') + std::string(off, ' ');
+		}
+
+		metersString += util::format("%s [%s] %s", i->name.c_str(), bargraph.c_str(), i->text.c_str());
+	}
+
+	if(metersString.size() > lineLength) {
+		metersString = metersString.substr(0, lineLength);
+	}
+
+	xassert(werase(metersWin) != ERR, "werase() call failed");
+	xassert(mvwprintw(metersWin, 0, 0, "%s", metersString.c_str()) != ERR, "mvwprintw() call failed");
+	xassert(wrefresh(metersWin) != ERR, "wrefresh() call failed");
 }
 
 UiEvt Ui::read()
@@ -367,7 +405,7 @@ void Ui::help()
 	    "\n"
 	    "=== Keyboard help end ===\n";
 
-	printw("%s", helpstr);
+	xassert(wprintw(mainWin, "%s", helpstr) != ERR, "wprintw() call failed");
 	maybeRefresh();
 }
 
@@ -462,7 +500,7 @@ void Ui::leaveBlock()
 {
 	blockMode = false;
 	if(pendingRefresh) {
-		refresh();
+		xassert(wrefresh(mainWin) != ERR, "wrefresh() call failed");
 		pendingRefresh = false;
 	}
 }
@@ -473,7 +511,7 @@ void Ui::maybeRefresh()
 		pendingRefresh = true;
 	}
 	else {
-		refresh();
+		xassert(wrefresh(mainWin) != ERR, "wrefresh() call failed");
 	}
 }
 

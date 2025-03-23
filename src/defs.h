@@ -22,12 +22,3 @@ enum Mode {
 	MODE_FM,
 	MODE_AM,
 };
-
-enum Meter {
-	METER_SIG,
-	METER_ALC,
-	METER_COMP,
-	METER_PWR,
-	METER_SWR,
-	METER_IDD,
-};

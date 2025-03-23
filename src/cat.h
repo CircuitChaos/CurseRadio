@@ -6,6 +6,7 @@
 #include "fd.h"
 #include "timer.h"
 #include "defs.h"
+#include "meters.h"
 
 struct CatEvt {
 public:
@@ -18,11 +19,11 @@ public:
 	};
 
 	const EventType type;
-	std::optional<std::string> error;                /* EVT_ERROR */
-	std::optional<std::pair<Meter, uint8_t> > meter; /* EVT_METER */
-	std::optional<uint32_t> freq;                    /* EVT_FREQ */
-	std::optional<Mode> mode;                        /* EVT_MODE */
-	std::optional<unsigned> width;                   /* EVT_WIDTH */
+	std::optional<std::string> error;                        /* EVT_ERROR */
+	std::optional<std::pair<meters::Meter, uint8_t> > meter; /* EVT_METER */
+	std::optional<uint32_t> freq;                            /* EVT_FREQ */
+	std::optional<Mode> mode;                                /* EVT_MODE */
+	std::optional<unsigned> width;                           /* EVT_WIDTH */
 
 	CatEvt(EventType type)
 	    : type(type) {}
@@ -36,7 +37,7 @@ public:
 	int getFd() const;
 	std::vector<CatEvt> read();
 
-	void getMeter(Meter meter);
+	void getMeter(meters::Meter meter);
 	void getFreq();
 	void setFreq(uint32_t freq);
 	void getMode();

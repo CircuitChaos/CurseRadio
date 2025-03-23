@@ -9,5 +9,5 @@ public:
 	operator WINDOW *();
 
 private:
-	WINDOW *wnd{nullptr};
+	WINDOW *win{nullptr};
 };

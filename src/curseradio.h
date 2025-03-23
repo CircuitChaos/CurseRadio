@@ -11,6 +11,7 @@
 #include "keyer.h"
 #include "logger.h"
 #include "defs.h"
+#include "meters.h"
 
 class CurseRadio {
 public:
@@ -58,7 +59,7 @@ private:
 	time_t frozenTime{0};
 
 	/* Meters being read, scheduled for sending to UI */
-	std::map<Meter, uint8_t> schedMeters;
+	std::map<meters::Meter, uint8_t> schedMeters;
 
 	/* Returns true if need to exit */
 	bool uiEvt(const UiEvt &evt);
