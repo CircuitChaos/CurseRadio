@@ -12,7 +12,7 @@
 Ui::Ui()
 {
 	// TODO: handle SIGWINCH somehow
-	// TODO: add freq to meters
+	// TODO: add freq and mode to meters
 
 	xassert(initscr(), "initscr() call failed");
 	xassert(cbreak() != ERR, "cbreak() call failed");
@@ -146,6 +146,9 @@ UiEvt Ui::read()
 
 		case MODE_SEND_TEXT:
 			return readSendText(ch);
+
+		case MODE_NOTE:
+			return readNote(ch);
 	}
 
 	xthrow("Invalid mode %d", mode);
@@ -163,6 +166,10 @@ UiEvt Ui::readCmd(int ch)
 
 		case 'q':
 			return UiEvt::EVT_QUIT;
+
+		case 'n':
+			setMode(MODE_NOTE);
+			break;
 
 		case KEY_UP:
 			return UiEvt::EVT_FREQ_UP_SLOW;
@@ -369,14 +376,24 @@ UiEvt Ui::readSendText(int ch)
 	return evt;
 }
 
+UiEvt Ui::readNote(int ch)
+{
+	if(handleTextInput(ch)) {
+		setMode(MODE_CMD);
+	}
+
+	return UiEvt::EVT_NONE;
+}
+
 void Ui::help()
 {
 	static const char helpstr[] =
 	    "=== Keyboard help ===\n"
 	    "\n"
-	    "Program control:\n"
+	    "Program control and miscellaneous:\n"
 	    "  h: show help (this screen)\n"
 	    "  q: quit\n"
+	    "  n: enter note\n"
 	    "\n"
 	    "Radio control:\n"
 	    "  up / down: slow tuning\n"
@@ -481,6 +498,14 @@ void Ui::setMode(Mode newMode)
 			enterBlock();
 			print("Enter text to send. Empty string will abort sending");
 			printNoNL("text>");
+			leaveBlock();
+			pendingText.clear();
+			break;
+
+		case MODE_NOTE:
+			enterBlock();
+			print("Enter note, it will be ignored");
+			printNoNL("note>");
 			leaveBlock();
 			pendingText.clear();
 			break;

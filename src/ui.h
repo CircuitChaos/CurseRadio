@@ -94,6 +94,7 @@ private:
 		MODE_CHECK_CALL,
 		MODE_LOG,
 		MODE_SEND_TEXT,
+		MODE_NOTE,
 	};
 
 	Mode mode{MODE_CMD};
@@ -119,4 +120,5 @@ private:
 	UiEvt readCheckCall(int ch);
 	UiEvt readLog(int ch);
 	UiEvt readSendText(int ch);
+	UiEvt readNote(int ch);
 };
