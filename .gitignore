@@ -1,2 +1,6 @@
 /.sconsign.dblite
 /build
+/.clang-format
+/.cproject
+/.project
+/.settings/
