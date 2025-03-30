@@ -11,8 +11,6 @@
 
 Ui::Ui()
 {
-	// TODO: handle SIGWINCH somehow
-
 	xassert(initscr(), "initscr() call failed");
 	xassert(cbreak() != ERR, "cbreak() call failed");
 	xassert(noecho() != ERR, "noecho() call failed");
@@ -179,19 +177,19 @@ UiEvt Ui::readCmd(int ch)
 			break;
 
 		case KEY_RIGHT:
-			return UiEvt::EVT_FREQ_UP_VSLOW;
+			return UiEvt::EVT_FREQ_UP_SLOW;
 
 		case KEY_UP:
-			return UiEvt::EVT_FREQ_UP_SLOW;
+			return UiEvt::EVT_FREQ_UP_NORM;
 
 		case KEY_PPAGE:
 			return UiEvt::EVT_FREQ_UP_FAST;
 
 		case KEY_LEFT:
-			return UiEvt::EVT_FREQ_DOWN_VSLOW;
+			return UiEvt::EVT_FREQ_DOWN_SLOW;
 
 		case KEY_DOWN:
-			return UiEvt::EVT_FREQ_DOWN_SLOW;
+			return UiEvt::EVT_FREQ_DOWN_NORM;
 
 		case KEY_NPAGE:
 			return UiEvt::EVT_FREQ_DOWN_FAST;
@@ -300,11 +298,8 @@ UiEvt Ui::readMode(int ch)
 	printKey(ch);
 	setState(STATE_CMD);
 
-	// TODO check if LSB / USB works
-	// TODO check what's the real difference between modes
 	static const std::map<int, std::pair<std::string, Mode> > modes = {
-	    {'l', {"LSB", MODE_LSB}},
-	    {'u', {"USB", MODE_USB}},
+	    {'s', {"SSB", MODE_SSB_1}},
 	    {'c', {"CW", MODE_CW_1}},
 	    {'d', {"data", MODE_DATA_1}},
 	    {'f', {"FM", MODE_FM}},
@@ -406,7 +401,8 @@ void Ui::help()
 	    "  n: enter note\n"
 	    "\n"
 	    "Radio control:\n"
-	    "  up / down: slow tuning\n"
+	    "  left / right: slow tuning\n"
+	    "  up / down: normal tuning\n"
 	    "  pgup / pgdn: fast tuning\n"
 	    "  =: reset frequency\n"
 	    "  b: select band\n"
@@ -418,7 +414,7 @@ void Ui::help()
 	    "  0...9: send preset\n"
 	    "\n"
 	    "Logging and contesting:\n"
-	    "  x: show current exchange\n"
+	    "  x: show next exchange\n"
 	    "  c: check callsign\n"
 	    "  l: log QSO\n"
 	    "\n"
@@ -476,8 +472,7 @@ void Ui::setState(State newState)
 		case STATE_MODE:
 			enterBlock();
 			print("Select mode:");
-			print("  l: LSB");
-			print("  u: USB");
+			print("  s: SSB");
 			print("  c: CW");
 			print("  d: data");
 			print("  f: FM");
@@ -552,7 +547,6 @@ void Ui::maybeRefresh()
 
 bool Ui::handleTextInput(int ch)
 {
-	// TODO there must be a better way to do it than reinventing the wheel
 	if(ch == 0x0d) {
 		print("");
 		return true;
@@ -575,8 +569,6 @@ bool Ui::handleTextInput(int ch)
 
 void Ui::printKey(int ch)
 {
-	// TODO don't print some keys
-
 	/* Only some keys are printed here */
 	if((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
 		print("%c", ch);

@@ -4,12 +4,11 @@
 
 Presets::Presets(const std::string &callsign)
 {
-	// TODO do it properly (configurable, etc.)
 	presets.push_back(util::format("CQ %s TEST", callsign.c_str()));
 	presets.push_back(callsign);
-	presets.push_back("PLACEHOLDER"); // TODO hack
-	presets.push_back("PLACEHOLDER"); // TODO hack
-	presets.push_back("PLACEHOLDER"); // TODO hack
+	presets.push_back("PLACEHOLDER");
+	presets.push_back("PLACEHOLDER");
+	presets.push_back("PLACEHOLDER");
 	presets.push_back("NR NR");
 	presets.push_back("AGN");
 	presets.push_back("QRS");

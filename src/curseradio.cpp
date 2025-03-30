@@ -12,8 +12,8 @@
 static const unsigned DEFAULT_WPM         = 25;
 static const unsigned METER_POLL_INTERVAL = 100;
 static const unsigned CAT_TIMEOUT         = 2000;
-static const int32_t TUNE_INCREMENT_VSLOW = 1;
-static const int32_t TUNE_INCREMENT_SLOW  = 100;
+static const int32_t TUNE_INCREMENT_SLOW  = 10;
+static const int32_t TUNE_INCREMENT_NORM  = 100;
 static const int32_t TUNE_INCREMENT_FAST  = 1000;
 
 void CurseRadio::run(const Cli &cli)
@@ -36,7 +36,6 @@ void CurseRadio::run(const Cli &cli)
 		cat.reset(new Cat(cli.getCatPort(), cli.getCatBaud(), catTimeoutTimer.get()));
 		inrfds.insert(cat->getFd());
 
-		// TODO maybe make this interval configurable from CLI
 		catMeterTimer.reset(new Timer(METER_POLL_INTERVAL));
 		inrfds.insert(catMeterTimer->getFd());
 		catMeterTimer->start();
@@ -88,11 +87,11 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 		case UiEvt::EVT_QUIT:
 			return true;
 
-		case UiEvt::EVT_FREQ_UP_VSLOW:
 		case UiEvt::EVT_FREQ_UP_SLOW:
+		case UiEvt::EVT_FREQ_UP_NORM:
 		case UiEvt::EVT_FREQ_UP_FAST:
-		case UiEvt::EVT_FREQ_DOWN_VSLOW:
 		case UiEvt::EVT_FREQ_DOWN_SLOW:
+		case UiEvt::EVT_FREQ_DOWN_NORM:
 		case UiEvt::EVT_FREQ_DOWN_FAST:
 		case UiEvt::EVT_FREQ_RESET: {
 			if(!cat) {
@@ -110,24 +109,24 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 			const Band band(band::getBandByFreq(newFreq));
 
 			switch(evt.type) {
-				case UiEvt::EVT_FREQ_UP_VSLOW:
-					increment = TUNE_INCREMENT_VSLOW;
-					break;
-
 				case UiEvt::EVT_FREQ_UP_SLOW:
 					increment = TUNE_INCREMENT_SLOW;
+					break;
+
+				case UiEvt::EVT_FREQ_UP_NORM:
+					increment = TUNE_INCREMENT_NORM;
 					break;
 
 				case UiEvt::EVT_FREQ_UP_FAST:
 					increment = TUNE_INCREMENT_FAST;
 					break;
 
-				case UiEvt::EVT_FREQ_DOWN_VSLOW:
-					increment = -TUNE_INCREMENT_VSLOW;
-					break;
-
 				case UiEvt::EVT_FREQ_DOWN_SLOW:
 					increment = -TUNE_INCREMENT_SLOW;
+					break;
+
+				case UiEvt::EVT_FREQ_DOWN_NORM:
+					increment = -TUNE_INCREMENT_NORM;
 					break;
 
 				case UiEvt::EVT_FREQ_DOWN_FAST:
@@ -211,12 +210,15 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 			}
 
 			xassert(evt.preset, "Preset in event not set");
-			if(evt.preset >= presets->numPresets()) {
-				ui.print("Preset not defined");
-				break;
+			unsigned presetNo(evt.preset.value());
+			if(presetNo == 0) {
+				presetNo = 9;
+			}
+			else {
+				--presetNo;
 			}
 
-			const std::string preset(presets->getPreset(evt.preset.value(), exchange->get()));
+			const std::string preset(presets->getPreset(presetNo, exchange->get()));
 			ui.print("Sending preset: %s", preset.c_str());
 			keyer->send(preset);
 			break;
@@ -227,7 +229,7 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 				ui.print("Exchange support disabled");
 				break;
 			}
-			ui.print("Current exchange: %s", exchange->get().c_str());
+			ui.print("Next exchange: %s", exchange->get().c_str());
 			break;
 
 		case UiEvt::EVT_CHECK_CALL:

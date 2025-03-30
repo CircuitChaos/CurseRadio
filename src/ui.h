@@ -18,11 +18,11 @@ public:
 		EVT_QUIT, /* q */
 
 		/* Radio control */
-		EVT_FREQ_UP_VSLOW,   /* right */
-		EVT_FREQ_UP_SLOW,    /* up */
+		EVT_FREQ_UP_SLOW,    /* right */
+		EVT_FREQ_UP_NORM,    /* up */
 		EVT_FREQ_UP_FAST,    /* pgup */
-		EVT_FREQ_DOWN_VSLOW, /* left */
-		EVT_FREQ_DOWN_SLOW,  /* down */
+		EVT_FREQ_DOWN_SLOW,  /* left */
+		EVT_FREQ_DOWN_NORM,  /* down */
 		EVT_FREQ_DOWN_FAST,  /* pgdn */
 		EVT_FREQ_RESET,      /* = */
 		EVT_BAND,            /* b */

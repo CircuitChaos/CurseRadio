@@ -32,8 +32,8 @@ static const std::map<Band, uint8_t> bandMap = {
 };
 
 static const std::map<Mode, uint8_t> modeMap = {
-    {MODE_LSB, 0x1},
-    {MODE_USB, 0x2},
+    {MODE_SSB_1, 0x1},
+    {MODE_SSB_2, 0x2},
     {MODE_CW_1, 0x3},
     {MODE_FM, 0x4},
     {MODE_AM, 0x5},
@@ -49,7 +49,6 @@ static const std::map<Mode, uint8_t> modeMap = {
 static speed_t translateBaud(unsigned baud)
 {
 	static std::map<unsigned, speed_t> baudMap = {
-	    // TODO: all other baudrates
 	    {4800, B4800},
 	    {9600, B9600},
 	    {19200, B19200},
@@ -83,8 +82,6 @@ Cat::Cat(const std::string &port, unsigned baud, Timer *timeoutTimer)
 	xassert(cfsetispeed(&t, speed) != -1, "Could not set input speed: %m");
 	xassert(cfsetospeed(&t, speed) != -1, "Could not set output speed: %m");
 	xassert(tcsetattr(fd, TCSAFLUSH, &t) != -1, "Could not set port attributes: %m");
-
-	// TODO function to read ID in a blocking way maybe
 }
 
 Cat::~Cat()
@@ -99,7 +96,6 @@ int Cat::getFd() const
 
 std::vector<std::string> Cat::tokenizeRecvq()
 {
-	// TODO check how it behaves if NUL is received
 	std::vector<std::string> v;
 	std::string::iterator i;
 	while((i = std::find(recvq.begin(), recvq.end(), ';')) != recvq.end()) {
@@ -155,8 +151,6 @@ std::vector<CatEvt> Cat::read()
 
 			const long mode(strtol(i->c_str() + 3, nullptr, 16));
 			const std::map<Mode, uint8_t>::const_iterator mi(std::find_if(modeMap.begin(), modeMap.end(), [mode](const auto &entry) { return entry.second == mode; }));
-
-			// TODO this might trip, as we don't support all modes
 			xassert(mi != modeMap.end(), "Could not find mode in mode map, CAT response is %s", i->c_str());
 
 			CatEvt evt(CatEvt::EVT_MODE);
@@ -236,6 +230,8 @@ void Cat::expectEvent(CatEvt::EventType evt)
 
 void Cat::gotEvent(CatEvt::EventType evt)
 {
+	// TODO this might trip, maybe it would be better to look for event in the whole vector? Or abandon it at all?
+
 	xassert(!expectedEvents.empty(), "Got CAT event %d, but not expecting any", evt);
 	xassert(expectedEvents[0] == evt, "Got CAT event %d, but expecting %d first", evt, expectedEvents[0]);
 

@@ -3,8 +3,8 @@
 #include <string>
 
 enum Mode {
-	MODE_LSB,    /* 1 */
-	MODE_USB,    /* 2 */
+	MODE_SSB_1,  /* 1 */
+	MODE_SSB_2,  /* 2 */
 	MODE_CW_1,   /* 3 */
 	MODE_FM,     /* 4 */
 	MODE_AM,     /* 5 */

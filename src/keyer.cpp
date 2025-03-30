@@ -161,7 +161,6 @@ std::string Keyer::stringToMorse(const std::string &s)
 	for(std::string::const_iterator i(s.begin()); i != s.end(); ++i) {
 		const std::map<char, std::string>::const_iterator it(map.find(tolower(*i)));
 		if(it == map.end()) {
-			// TODO log this
 			continue;
 		}
 

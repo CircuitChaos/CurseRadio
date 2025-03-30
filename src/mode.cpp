@@ -5,8 +5,8 @@
 std::string getModeName(Mode mode)
 {
 	static const std::map<Mode, std::string> map = {
-	    {MODE_LSB, "LSB"},
-	    {MODE_USB, "USB"},
+	    {MODE_SSB_1, "SSB (1)"},
+	    {MODE_SSB_2, "SSB (2)"},
 	    {MODE_CW_1, "CW (3)"},
 	    {MODE_FM, "FM"},
 	    {MODE_AM, "AM"},

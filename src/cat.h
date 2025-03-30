@@ -23,7 +23,6 @@ public:
 	std::optional<std::pair<meters::Meter, uint8_t> > meter; /* EVT_METER */
 	std::optional<uint32_t> freq;                            /* EVT_FREQ */
 	std::optional<Mode> mode;                                /* EVT_MODE */
-	std::optional<unsigned> width;                           /* EVT_WIDTH */
 
 	CatEvt(EventType type)
 	    : type(type) {}

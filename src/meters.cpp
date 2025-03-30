@@ -95,7 +95,7 @@ static std::string getAlc(uint8_t raw)
 	return util::format("%3.0f%%", interpolate(raw, cal).first);
 }
 
-static std::string getComp(uint8_t raw)
+static std::string getComp(uint8_t /* raw */)
 {
 	// TODO
 	return "TODO comp";
