@@ -2,7 +2,7 @@
 
 #include <string>
 #include <ctime>
-#include "defs.h"
+#include "mode.h"
 
 class Logger {
 public:

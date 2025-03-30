@@ -5,15 +5,16 @@
 #include <unistd.h>
 #include <ctime>
 #include "curseradio.h"
-#include "bandlimits.h"
+#include "band.h"
 #include "throw.h"
 #include "util.h"
 
 static const unsigned DEFAULT_WPM         = 25;
 static const unsigned METER_POLL_INTERVAL = 100;
 static const unsigned CAT_TIMEOUT         = 2000;
-static const int32_t TUNE_INCREMENT_SLOW  = 10;
-static const int32_t TUNE_INCREMENT_FAST  = 250;
+static const int32_t TUNE_INCREMENT_VSLOW = 1;
+static const int32_t TUNE_INCREMENT_SLOW  = 100;
+static const int32_t TUNE_INCREMENT_FAST  = 1000;
 
 void CurseRadio::run(const Cli &cli)
 {
@@ -87,8 +88,10 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 		case UiEvt::EVT_QUIT:
 			return true;
 
+		case UiEvt::EVT_FREQ_UP_VSLOW:
 		case UiEvt::EVT_FREQ_UP_SLOW:
 		case UiEvt::EVT_FREQ_UP_FAST:
+		case UiEvt::EVT_FREQ_DOWN_VSLOW:
 		case UiEvt::EVT_FREQ_DOWN_SLOW:
 		case UiEvt::EVT_FREQ_DOWN_FAST:
 		case UiEvt::EVT_FREQ_RESET: {
@@ -97,35 +100,62 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 				break;
 			}
 
-			cat->getFreq();
-			ScheduledCatOp op(ScheduledCatOp::OP_FREQ_ADJUST);
+			if(!curFreq) {
+				ui.print("Current frequency unknown yet");
+				break;
+			}
+
+			uint32_t newFreq(curFreq.value());
+			int32_t increment(0);
+			const Band band(band::getBandByFreq(newFreq));
+
 			switch(evt.type) {
+				case UiEvt::EVT_FREQ_UP_VSLOW:
+					increment = TUNE_INCREMENT_VSLOW;
+					break;
+
 				case UiEvt::EVT_FREQ_UP_SLOW:
-					op.freqIncrement = TUNE_INCREMENT_SLOW;
+					increment = TUNE_INCREMENT_SLOW;
 					break;
 
 				case UiEvt::EVT_FREQ_UP_FAST:
-					op.freqIncrement = TUNE_INCREMENT_FAST;
+					increment = TUNE_INCREMENT_FAST;
+					break;
+
+				case UiEvt::EVT_FREQ_DOWN_VSLOW:
+					increment = -TUNE_INCREMENT_VSLOW;
 					break;
 
 				case UiEvt::EVT_FREQ_DOWN_SLOW:
-					op.freqIncrement = -TUNE_INCREMENT_SLOW;
+					increment = -TUNE_INCREMENT_SLOW;
 					break;
 
 				case UiEvt::EVT_FREQ_DOWN_FAST:
-					op.freqIncrement = -TUNE_INCREMENT_FAST;
+					increment = -TUNE_INCREMENT_FAST;
 					break;
 
 				case UiEvt::EVT_FREQ_RESET:
-					op.freqIncrement = 0;
+					newFreq = band::getMinByBand(band);
 					break;
 
 				default:
-					xthrow("UI event %d is unexpectedhere", evt.type);
+					xthrow("UI event %d is unexpected here", evt.type);
 					break;
 			}
 
-			schedOps.push_back(op);
+			if(increment) {
+				newFreq += increment;
+				if(newFreq < band::getMinByBand(band)) {
+					newFreq = band::getMinByBand(band);
+				}
+				else if(newFreq > band::getMaxByBand(band)) {
+					newFreq = band::getMaxByBand(band);
+				}
+			}
+
+			ui.print("Setting frequency to %d.%03d kHz", newFreq / 1000, newFreq % 1000);
+			cat->setFreq(newFreq);
+			curFreq = newFreq;
 			break;
 		}
 
@@ -149,17 +179,6 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 			}
 
 			cat->setMode(evt.mode.value());
-			break;
-
-		case UiEvt::EVT_BW_DOWN:
-		case UiEvt::EVT_BW_UP:
-			if(!cat) {
-				ui.print("CAT disabled");
-				break;
-			}
-
-			cat->getWidth();
-			schedOps.push_back(ScheduledCatOp((evt.type == UiEvt::EVT_BW_DOWN) ? ScheduledCatOp::OP_BW_DOWN : ScheduledCatOp::OP_BW_UP));
 			break;
 
 		case UiEvt::EVT_SWAP:
@@ -234,31 +253,49 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 				break;
 			}
 
+			if(!curFreq || !curMode) {
+				ui.print("Current freq or mode unknown yet (no CAT?), cannot log");
+				break;
+			}
+
 			if(logger->exists(evt.logCall.value())) {
 				ui.print("Warning: call %s already exists in log", evt.logCall.value().c_str());
 			}
 
 			Logger::Entry e;
 			if(frozenTime) {
-				e.ts       = frozenTime;
-				frozenTime = 0;
+				e.ts = frozenTime.value();
+				frozenTime.reset();
 			}
 			else {
 				e.ts = time(nullptr);
 			}
 
-			e.freq = 0;       // doesn't matter -- will be filled in event
-			e.mode = MODE_CW; // doesn't matter -- will be filled in event
-			// sentRst will be filled in event based on mode
+			e.freq = curFreq.value();
+			e.mode = curMode.value();
+			if(e.mode == MODE_CW_1 || e.mode == MODE_CW_2) {
+				e.sentRst = "599";
+			}
+			else {
+				e.sentRst = "59";
+			}
 			e.sentXchg = exchange->get();
 			e.rcvdCall = evt.logCall.value();
 			if(evt.logRst) {
 				e.rcvdRst = evt.logRst.value();
 			}
+			else {
+				e.rcvdRst = e.sentRst;
+			}
 			e.rcvdXchg = evt.logXchg.value();
 
-			cat->getFreq();
-			schedOps.push_back(e);
+			ui.print("%s", logger->log(e).c_str());
+			if(exchange->next()) {
+				ui.print("Log entry written, next exchange: %s", exchange->get().c_str());
+			}
+			else {
+				ui.print("Log entry written, exchange did not change");
+			}
 			break;
 		}
 
@@ -342,23 +379,29 @@ void CurseRadio::catEvt(const CatEvt &evt)
 			switch(evt.meter.value().first) {
 				case meters::METER_IDD:
 					if(!evt.meter.value().second) {
-						/* If IDD = 0, then we're in RX mode -- only read signal */
+						/* If IDD = 0, then we're in RX mode:
+						 * - read signal
+						 * - read freq
+						 * - read mode
+						 */
 						cat->getMeter(meters::METER_SIG);
 					}
 					else {
-						/* Store IDD and go to ALC -> COMP -> PWR -> SWR */
+						/* IDD != 0, we're in TX mode:
+						 * - store IDD
+						 * - read ALC
+						 * - read COMP
+						 * - read PWR
+						 * - read SWR
+						 */
 						schedMeters[evt.meter.value().first] = evt.meter.value().second;
 						cat->getMeter(meters::METER_ALC);
 					}
 					break;
 
-				case meters::METER_SWR:
 				case meters::METER_SIG:
-					/* In RX mode only signal is read, in TX reading ends on SWR */
 					schedMeters[evt.meter.value().first] = evt.meter.value().second;
-					ui.updateMeters(schedMeters);
-					schedMeters.clear();
-					catMeterTimer->start();
+					cat->getFreq();
 					break;
 
 				case meters::METER_ALC:
@@ -376,102 +419,31 @@ void CurseRadio::catEvt(const CatEvt &evt)
 					cat->getMeter(meters::METER_SWR);
 					break;
 
+				case meters::METER_SWR:
+					ui.updateMeters(schedMeters, curFreq, curMode);
+					schedMeters.clear();
+					catMeterTimer->start();
+					break;
+
 				default:
 					xthrow("Unknown meter %d", evt.meter.value().first);
 					break;
 			}
 			break;
 
-		case CatEvt::EVT_FREQ: {
+		case CatEvt::EVT_FREQ:
 			xassert(evt.freq, "Expecting frequency in event");
-			xassert(!schedOps.empty(), "Frequency read, but no scheduled operation");
-			const ScheduledCatOp op(schedOps[0]);
-
-			switch(op.type) {
-				case ScheduledCatOp::OP_FREQ_ADJUST: {
-					xassert(op.freqIncrement, "Increment not found");
-					uint32_t freq(evt.freq.value());
-					const int32_t increment(op.freqIncrement.value());
-					const Band band(bandlimits::getBandByFreq(freq));
-
-					if(increment) {
-						freq += increment;
-						if(freq < bandlimits::getMinByBand(band)) {
-							freq = bandlimits::getMinByBand(band);
-						}
-						else if(freq > bandlimits::getMaxByBand(band)) {
-							freq = bandlimits::getMaxByBand(band);
-						}
-					}
-					else {
-						freq = bandlimits::getMinByBand(band);
-					}
-
-					ui.print("Setting frequency to %d.%03d kHz", freq / 1000, freq % 1000);
-					schedOps.erase(schedOps.begin());
-					cat->setFreq(freq);
-					break;
-				}
-
-				case ScheduledCatOp::OP_LOG:
-					schedFreq = evt.freq.value();
-					cat->getMode();
-					break;
-
-				default:
-					xthrow("Frequency read, but scheduled operation is %d", op.type);
-					break;
-			}
+			curFreq = evt.freq;
+			cat->getMode();
 			break;
-		}
 
-		case CatEvt::EVT_MODE: {
+		case CatEvt::EVT_MODE:
 			xassert(evt.mode, "Expecting mode in event");
-			xassert(!schedOps.empty(), "Mode read, but no scheduled operation");
-			const ScheduledCatOp op(schedOps[0]);
-			schedOps.erase(schedOps.begin());
-			xassert(op.type == ScheduledCatOp::OP_LOG, "Mode read, but scheduled operation is not logging");
-			xassert(op.logEntry, "Log entry not found");
-			xassert(logger, "Got EVT_MODE, but logger is disabled");
-
-			Logger::Entry le(op.logEntry.value());
-			le.mode = evt.mode.value();
-			if(le.sentRst.empty()) {
-				le.sentRst = (le.mode == MODE_CW) ? "599" : "59";
-			}
-			if(le.rcvdRst.empty()) {
-				le.rcvdRst = (le.mode == MODE_CW) ? "599" : "59";
-			}
-			le.freq = schedFreq;
-
-			ui.print("Logged QSO: %s", logger->log(le).c_str());
-			schedFreq = 0;
-			if(exchange->next()) {
-				ui.print("Log entry written, next exchange: %s", exchange->get().c_str());
-			}
-			else {
-				ui.print("Log entry written, exchange does not change");
-			}
+			curMode = evt.mode;
+			ui.updateMeters(schedMeters, curFreq, curMode);
+			schedMeters.clear();
+			catMeterTimer->start();
 			break;
-		}
-
-		case CatEvt::EVT_WIDTH: {
-			xassert(evt.width, "Expecting bandwidth in event");
-			xassert(!schedOps.empty(), "Bandwidth read, but no scheduled operation");
-			const ScheduledCatOp::OpType type(schedOps[0].type);
-			schedOps.erase(schedOps.begin());
-
-			if(type == ScheduledCatOp::OP_BW_UP) {
-				/* TODO increase bandwidth, if possible, call setWidth */
-			}
-			else if(type == ScheduledCatOp::OP_BW_DOWN) {
-				/* TODO decrease bandwidth, if possible, call setWidth */
-			}
-			else {
-				xthrow("Bandwidth read, but scheduled operation is %d", type);
-			}
-			break;
-		}
 
 		default:
 			xthrow("Unknown CAT event %d", evt.type);
@@ -519,5 +491,3 @@ int main(int argc, char *const argv[])
 
 	return EXIT_SUCCESS;
 }
-
-// TODO some command to decrement exchange

@@ -5,7 +5,8 @@
 #include <vector>
 #include "fd.h"
 #include "timer.h"
-#include "defs.h"
+#include "band.h"
+#include "mode.h"
 #include "meters.h"
 
 struct CatEvt {
@@ -15,7 +16,6 @@ public:
 		EVT_METER,
 		EVT_FREQ,
 		EVT_MODE,
-		EVT_WIDTH,
 	};
 
 	const EventType type;
@@ -43,8 +43,6 @@ public:
 	void getMode();
 	void setBand(Band band);
 	void setMode(Mode mode);
-	void getWidth();
-	void setWidth(unsigned width);
 	void swapVfo();
 	void zin();
 

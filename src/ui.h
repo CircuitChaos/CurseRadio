@@ -6,7 +6,8 @@
 #include <map>
 #include "curseswindow.h"
 #include "meters.h"
-#include "defs.h"
+#include "band.h"
+#include "mode.h"
 
 struct UiEvt {
 public:
@@ -17,16 +18,16 @@ public:
 		EVT_QUIT, /* q */
 
 		/* Radio control */
-		EVT_FREQ_UP_SLOW,   /* up */
-		EVT_FREQ_UP_FAST,   /* pgup */
-		EVT_FREQ_DOWN_SLOW, /* down */
-		EVT_FREQ_DOWN_FAST, /* pgdn */
-		EVT_FREQ_RESET,     /* = */
-		EVT_BAND,           /* b */
-		EVT_MODE,           /* m */
-		EVT_BW_DOWN,        /* left */
-		EVT_BW_UP,          /* right */
-		EVT_SWAP,           /* v */
+		EVT_FREQ_UP_VSLOW,   /* right */
+		EVT_FREQ_UP_SLOW,    /* up */
+		EVT_FREQ_UP_FAST,    /* pgup */
+		EVT_FREQ_DOWN_VSLOW, /* left */
+		EVT_FREQ_DOWN_SLOW,  /* down */
+		EVT_FREQ_DOWN_FAST,  /* pgdn */
+		EVT_FREQ_RESET,      /* = */
+		EVT_BAND,            /* b */
+		EVT_MODE,            /* m */
+		EVT_SWAP,            /* v */
 
 		/* Presets */
 		EVT_SHOW_PRESETS, /* p */
@@ -84,27 +85,28 @@ public:
 	UiEvt read();
 	void print(const char *fmt, ...);
 	void printNoNL(const char *fmt, ...);
-	void updateMeters(const std::map<meters::Meter, uint8_t> &meters);
+	void updateMeters(const std::map<meters::Meter, uint8_t> &meters, const std::optional<uint32_t> &freq, const std::optional<Mode> &mode);
 
 private:
-	enum Mode {
-		MODE_CMD,
-		MODE_BAND,
-		MODE_MODE,
-		MODE_CHECK_CALL,
-		MODE_LOG,
-		MODE_SEND_TEXT,
-		MODE_NOTE,
+	enum State {
+		STATE_CMD,
+		STATE_BAND,
+		STATE_MODE,
+		STATE_CHECK_CALL,
+		STATE_LOG,
+		STATE_SEND_TEXT,
+		STATE_NOTE,
 	};
 
-	Mode mode{MODE_CMD};
+	State state{STATE_CMD};
 	bool blockMode{false};
 	bool pendingRefresh{false};
 	std::string pendingText;
 	CursesWindow metersWin;
 	CursesWindow mainWin;
+	size_t busyCharIndex{0};
 
-	void setMode(Mode newMode);
+	void setState(State newState);
 	void help();
 
 	void enterBlock();

@@ -148,6 +148,7 @@ static std::string getIdd(uint8_t raw)
 	return util::format("%4.1f A", interpolate(raw, cal).first);
 }
 
+// TODO test it extensively if it really works because I suspect it might not
 std::string meters::getValue(Meter m, uint8_t raw)
 {
 	static const std::map<Meter, std::string (*)(uint8_t)> functions = {

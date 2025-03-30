@@ -2,7 +2,7 @@
 #include <utility>
 #include <algorithm>
 #include "throw.h"
-#include "bandlimits.h"
+#include "band.h"
 
 struct Entry {
 	Band band;
@@ -34,17 +34,17 @@ static const Entry &getByBand(Band band)
 	return *i;
 }
 
-uint32_t bandlimits::getMinByBand(Band band)
+uint32_t band::getMinByBand(Band band)
 {
 	return getByBand(band).min * 1000;
 }
 
-uint32_t bandlimits::getMaxByBand(Band band)
+uint32_t band::getMaxByBand(Band band)
 {
 	return getByBand(band).max * 1000;
 }
 
-Band bandlimits::getBandByFreq(uint32_t freq)
+Band band::getBandByFreq(uint32_t freq)
 {
 	const std::vector<Entry>::const_iterator i(std::find_if(bands.begin(), bands.end(), [freq](const auto &entry) { return freq >= entry.min * 1000 && freq <= entry.max * 1000; }));
 	xassert(i != bands.end(), "Band for freq %u not found", freq);

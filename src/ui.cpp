@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <ncurses.h>
 #include <map>
-#include "bandlimits.h"
+#include "band.h"
 #include "throw.h"
 #include "util.h"
 #include "ui.h"
@@ -12,7 +12,6 @@
 Ui::Ui()
 {
 	// TODO: handle SIGWINCH somehow
-	// TODO: add freq and mode to meters
 
 	xassert(initscr(), "initscr() call failed");
 	xassert(cbreak() != ERR, "cbreak() call failed");
@@ -72,7 +71,7 @@ void Ui::printNoNL(const char *fmt, ...)
 	maybeRefresh();
 }
 
-void Ui::updateMeters(const std::map<meters::Meter, uint8_t> &meters)
+void Ui::updateMeters(const std::map<meters::Meter, uint8_t> &meters, const std::optional<uint32_t> &freq, const std::optional<Mode> &mode)
 {
 	struct Meter {
 		std::string name;
@@ -80,8 +79,16 @@ void Ui::updateMeters(const std::map<meters::Meter, uint8_t> &meters)
 		std::string text;
 	};
 
+	static const std::string busyChars("|/-\\");
+	std::string prefix(util::format("%c ", busyChars[busyCharIndex++]));
+	busyCharIndex %= busyChars.size();
+
+	if(freq && mode) {
+		prefix += util::format("%u.%03u kHz %s | ", freq.value() / 1000, freq.value() % 1000, getModeName(mode.value()).c_str());
+	}
+
 	std::vector<Meter> translatedMeters;
-	unsigned totalLength(0);
+	unsigned totalLength(prefix.size());
 	for(std::map<meters::Meter, uint8_t>::const_iterator i(meters.begin()); i != meters.end(); ++i) {
 		Meter m;
 		m.name = meters::getName(i->first);
@@ -100,7 +107,7 @@ void Ui::updateMeters(const std::map<meters::Meter, uint8_t> &meters)
 	const unsigned lineLength(cols - 1);
 	const unsigned bargraphLength((lineLength - totalLength) / meters.size());
 
-	std::string metersString;
+	std::string metersString(prefix);
 	for(std::vector<Meter>::const_iterator i(translatedMeters.begin()); i != translatedMeters.end(); ++i) {
 		if(i != translatedMeters.begin()) {
 			metersString += " | ";
@@ -128,30 +135,30 @@ void Ui::updateMeters(const std::map<meters::Meter, uint8_t> &meters)
 UiEvt Ui::read()
 {
 	const int ch(getch());
-	switch(mode) {
-		case MODE_CMD:
+	switch(state) {
+		case STATE_CMD:
 			return readCmd(ch);
 
-		case MODE_BAND:
+		case STATE_BAND:
 			return readBand(ch);
 
-		case MODE_MODE:
+		case STATE_MODE:
 			return readMode(ch);
 
-		case MODE_CHECK_CALL:
+		case STATE_CHECK_CALL:
 			return readCheckCall(ch);
 
-		case MODE_LOG:
+		case STATE_LOG:
 			return readLog(ch);
 
-		case MODE_SEND_TEXT:
+		case STATE_SEND_TEXT:
 			return readSendText(ch);
 
-		case MODE_NOTE:
+		case STATE_NOTE:
 			return readNote(ch);
 	}
 
-	xthrow("Invalid mode %d", mode);
+	xthrow("Invalid state %d", state);
 	/* NOTREACHED */
 	return UiEvt::EVT_NONE;
 }
@@ -168,14 +175,20 @@ UiEvt Ui::readCmd(int ch)
 			return UiEvt::EVT_QUIT;
 
 		case 'n':
-			setMode(MODE_NOTE);
+			setState(STATE_NOTE);
 			break;
+
+		case KEY_RIGHT:
+			return UiEvt::EVT_FREQ_UP_VSLOW;
 
 		case KEY_UP:
 			return UiEvt::EVT_FREQ_UP_SLOW;
 
 		case KEY_PPAGE:
 			return UiEvt::EVT_FREQ_UP_FAST;
+
+		case KEY_LEFT:
+			return UiEvt::EVT_FREQ_DOWN_VSLOW;
 
 		case KEY_DOWN:
 			return UiEvt::EVT_FREQ_DOWN_SLOW;
@@ -187,18 +200,12 @@ UiEvt Ui::readCmd(int ch)
 			return UiEvt::EVT_FREQ_RESET;
 
 		case 'b':
-			setMode(MODE_BAND);
+			setState(STATE_BAND);
 			break;
 
 		case 'm':
-			setMode(MODE_MODE);
+			setState(STATE_MODE);
 			break;
-
-		case KEY_LEFT:
-			return UiEvt::EVT_BW_DOWN;
-
-		case KEY_RIGHT:
-			return UiEvt::EVT_BW_UP;
 
 		case 'v':
 			return UiEvt::EVT_SWAP;
@@ -222,15 +229,15 @@ UiEvt Ui::readCmd(int ch)
 			return UiEvt::EVT_SHOW_XCHG;
 
 		case 'c':
-			setMode(MODE_CHECK_CALL);
+			setState(STATE_CHECK_CALL);
 			break;
 
 		case 'l':
-			setMode(MODE_LOG);
+			setState(STATE_LOG);
 			return UiEvt::EVT_FREEZE_TIME;
 
 		case 't':
-			setMode(MODE_SEND_TEXT);
+			setState(STATE_SEND_TEXT);
 			break;
 
 		case 'u':
@@ -256,7 +263,7 @@ UiEvt Ui::readCmd(int ch)
 UiEvt Ui::readBand(int ch)
 {
 	printKey(ch);
-	setMode(MODE_CMD);
+	setState(STATE_CMD);
 
 	static const std::map<int, std::pair<std::string, Band> > bands = {
 	    {'1', {"160 m", BAND_160}},
@@ -291,12 +298,15 @@ UiEvt Ui::readBand(int ch)
 UiEvt Ui::readMode(int ch)
 {
 	printKey(ch);
-	setMode(MODE_CMD);
+	setState(STATE_CMD);
 
-	static const std::map<int, std::pair<std::string, ::Mode> > modes = {
-	    {'s', {"SSB", MODE_SSB}},
-	    {'c', {"CW", MODE_CW}},
-	    {'d', {"data", MODE_DATA}},
+	// TODO check if LSB / USB works
+	// TODO check what's the real difference between modes
+	static const std::map<int, std::pair<std::string, Mode> > modes = {
+	    {'l', {"LSB", MODE_LSB}},
+	    {'u', {"USB", MODE_USB}},
+	    {'c', {"CW", MODE_CW_1}},
+	    {'d', {"data", MODE_DATA_1}},
 	    {'f', {"FM", MODE_FM}},
 	    {'a', {"AM", MODE_AM}},
 	};
@@ -306,7 +316,7 @@ UiEvt Ui::readMode(int ch)
 		return UiEvt::EVT_NONE;
 	}
 
-	const std::map<int, std::pair<std::string, ::Mode> >::const_iterator i(modes.find(ch));
+	const std::map<int, std::pair<std::string, Mode> >::const_iterator i(modes.find(ch));
 	if(i == modes.end()) {
 		print("Unknown key pressed -- mode selection abandoned");
 		return UiEvt::EVT_NONE;
@@ -322,7 +332,7 @@ UiEvt Ui::readCheckCall(int ch)
 		return UiEvt::EVT_NONE;
 	}
 
-	setMode(MODE_CMD);
+	setState(STATE_CMD);
 	if(pendingText.empty()) {
 		print("Callsign check aborted");
 		return UiEvt::EVT_NONE;
@@ -339,7 +349,7 @@ UiEvt Ui::readLog(int ch)
 		return UiEvt::EVT_NONE;
 	}
 
-	setMode(MODE_CMD);
+	setState(STATE_CMD);
 	if(pendingText.empty()) {
 		print("Logging aborted");
 		return UiEvt::EVT_NONE;
@@ -365,7 +375,7 @@ UiEvt Ui::readSendText(int ch)
 		return UiEvt::EVT_NONE;
 	}
 
-	setMode(MODE_CMD);
+	setState(STATE_CMD);
 	if(pendingText.empty()) {
 		print("Sending aborted");
 		return UiEvt::EVT_NONE;
@@ -379,7 +389,7 @@ UiEvt Ui::readSendText(int ch)
 UiEvt Ui::readNote(int ch)
 {
 	if(handleTextInput(ch)) {
-		setMode(MODE_CMD);
+		setState(STATE_CMD);
 	}
 
 	return UiEvt::EVT_NONE;
@@ -401,7 +411,6 @@ void Ui::help()
 	    "  =: reset frequency\n"
 	    "  b: select band\n"
 	    "  m: select mode\n"
-	    "  left / right: bandwidth control (WDH)\n"
 	    "  v: swap VFO\n"
 	    "\n"
 	    "Presets:\n"
@@ -426,14 +435,14 @@ void Ui::help()
 	maybeRefresh();
 }
 
-void Ui::setMode(Mode newMode)
+void Ui::setState(State newState)
 {
-	mode = newMode;
-	switch(newMode) {
-		case MODE_CMD:
+	state = newState;
+	switch(newState) {
+		case STATE_CMD:
 			break;
 
-		case MODE_BAND: {
+		case STATE_BAND: {
 			enterBlock();
 			print("Select band:");
 			static const std::vector<std::pair<Band, unsigned> > bands = {
@@ -453,8 +462,8 @@ void Ui::setMode(Mode newMode)
 				print("  %u: %u m (%u - %u kHz)",
 				    (i + 1) % 10,
 				    bands[i].second,
-				    bandlimits::getMinByBand(bands[i].first) / 1000,
-				    bandlimits::getMaxByBand(bands[i].first) / 1000);
+				    band::getMinByBand(bands[i].first) / 1000,
+				    band::getMaxByBand(bands[i].first) / 1000);
 			}
 			print("  g: generic");
 			print("  m: MW");
@@ -464,10 +473,11 @@ void Ui::setMode(Mode newMode)
 			break;
 		}
 
-		case MODE_MODE:
+		case STATE_MODE:
 			enterBlock();
 			print("Select mode:");
-			print("  s: SSB");
+			print("  l: LSB");
+			print("  u: USB");
 			print("  c: CW");
 			print("  d: data");
 			print("  f: FM");
@@ -477,7 +487,7 @@ void Ui::setMode(Mode newMode)
 			leaveBlock();
 			break;
 
-		case MODE_CHECK_CALL:
+		case STATE_CHECK_CALL:
 			enterBlock();
 			print("Enter callsign to check. Empty string will abort checking");
 			printNoNL("call>");
@@ -485,7 +495,7 @@ void Ui::setMode(Mode newMode)
 			pendingText.clear();
 			break;
 
-		case MODE_LOG:
+		case STATE_LOG:
 			enterBlock();
 			print("Enter callsign and exchange, or callsign, report and exchange (call xchg, call rst xchg)");
 			print("Empty string will abort log entry");
@@ -494,7 +504,7 @@ void Ui::setMode(Mode newMode)
 			pendingText.clear();
 			break;
 
-		case MODE_SEND_TEXT:
+		case STATE_SEND_TEXT:
 			enterBlock();
 			print("Enter text to send. Empty string will abort sending");
 			printNoNL("text>");
@@ -502,7 +512,7 @@ void Ui::setMode(Mode newMode)
 			pendingText.clear();
 			break;
 
-		case MODE_NOTE:
+		case STATE_NOTE:
 			enterBlock();
 			print("Enter note, it will be ignored");
 			printNoNL("note>");
@@ -511,7 +521,7 @@ void Ui::setMode(Mode newMode)
 			break;
 
 		default:
-			xthrow("Invalid mode %d", mode);
+			xthrow("Invalid state %d", state);
 			break;
 	}
 }
@@ -565,6 +575,8 @@ bool Ui::handleTextInput(int ch)
 
 void Ui::printKey(int ch)
 {
+	// TODO don't print some keys
+
 	/* Only some keys are printed here */
 	if((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
 		print("%c", ch);

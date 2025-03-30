@@ -32,11 +32,18 @@ static const std::map<Band, uint8_t> bandMap = {
 };
 
 static const std::map<Mode, uint8_t> modeMap = {
-    {MODE_SSB, 0x1},
-    {MODE_CW, 0x3},
-    {MODE_DATA, 0x8},
+    {MODE_LSB, 0x1},
+    {MODE_USB, 0x2},
+    {MODE_CW_1, 0x3},
     {MODE_FM, 0x4},
     {MODE_AM, 0x5},
+    {MODE_RTTY_1, 0x6},
+    {MODE_CW_2, 0x7},
+    {MODE_DATA_1, 0x8},
+    {MODE_RTTY_2, 0x9},
+    {MODE_FM_N, 0xB},
+    {MODE_DATA_2, 0xC},
+    {MODE_AM_N, 0xD},
 };
 
 static speed_t translateBaud(unsigned baud)
@@ -156,11 +163,6 @@ std::vector<CatEvt> Cat::read()
 			evt.mode = mi->first;
 			evts.push_back(evt);
 		}
-		else if(code == "SH") {
-			xassert(i->size() == 6, "CAT SH response %s too short", i->c_str());
-			xassert((*i)[2] == '0', "CAT SH response %s invalid", i->c_str());
-			// TODO EVT_WIDTH
-		}
 		else {
 			xthrow("Unsupported CAT response: %s", i->c_str());
 		}
@@ -211,17 +213,6 @@ void Cat::setMode(Mode mode)
 	const std::map<Mode, uint8_t>::const_iterator i(modeMap.find(mode));
 	xassert(i != modeMap.end(), "Could not find mode %d", mode);
 	send("MD0%X", i->second);
-}
-
-void Cat::getWidth()
-{
-	expectEvent(CatEvt::EVT_WIDTH);
-	// TODO
-}
-
-void Cat::setWidth(unsigned width)
-{
-	// TODO
 }
 
 void Cat::swapVfo()

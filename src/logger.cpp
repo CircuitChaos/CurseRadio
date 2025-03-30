@@ -18,10 +18,14 @@ std::string Logger::log(const Entry &e)
 	strftime(datetime, sizeof(datetime), "%Y-%m-%d %H%M", &tm);
 
 	static const std::map<Mode, std::string> modeMap = {
-	    {MODE_SSB, "PH"},
-	    {MODE_CW, "CW"},
-	    {MODE_DATA, "DG"}, // TODO maybe RY will be needed sometimes?
+	    {MODE_LSB, "PH"},
+	    {MODE_USB, "PH"},
+	    {MODE_CW_1, "CW"},
+	    {MODE_CW_2, "CW"},
+	    {MODE_DATA_1, "DG"}, // TODO maybe RY will be needed sometimes?
+	    {MODE_DATA_2, "DG"}, // TODO maybe RY will be needed sometimes?
 	    {MODE_FM, "FM"},
+	    {MODE_FM_N, "FM"},
 	    // TODO: MODE_AM unsupported here
 	};
 
