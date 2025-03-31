@@ -265,17 +265,21 @@ Lots of things, because the program is in the very early phase.
 * Sort this TODO list, now it's very chaotic
 * Add some license
 
-## License
+## Safety and license
 
 I'm a programmer, not a lawyer, so it will be simple.
 
-If you want to use this program, do it. Just don't expect anything from me and don't hold me accountable for anything. Think before you do anything – remember that you can kill your radio if you transmit into an unmatched load, you can kill your appliances if you have RF in your shack, you can burn yourself or others with RF energy, introduce interference, etc. You're licensed, so you know what you're doing, and if you're not licensed, then don't use this program with a real radio.
+If you want to use this program, do it. Just don't expect anything from me and don't hold me accountable for anything. There's no warranty. Think before you do anything – remember that you can kill your radio if you transmit into an unmatched load, you can kill your appliances if you have RF in your shack, you can lock yourself out of your PC if your USB connections stop working due to RF EMI, you can burn yourself or others with RF energy, introduce interference, etc. You're licensed, so you know what you're doing, and if you're not licensed, then don't use this program with a real radio.
 
-If you want to use parts of this program in your own non-commercial project (open- or closed-source), you're also free to do it. You don't have to list me anywhere (although it would be nice if you provided a link to this program, if you think your users would benefit from it). Sharing is caring.
+Let me reiterate what's been said previously – if you start the program with the PTT port configured, there will be a brief keying event due to how Linux drivers handle control signals (it's true both for DTR and for RTS). If this event causes enough RF EMI to break the USB connection, you'll be stuck with the keyed radio and a program that terminated with an error. The only way out of this is turning the radio off.
+
+If you want to use parts of this program in your own non-commercial project (open- or closed-source), you're free to do it. You don't have to list me anywhere (although it would be nice if you provided a link to this program if you think your users would benefit from it). Sharing is caring.
 
 If you want to use parts of this program in a commercial product, please contact me first.
 
-In general, if you have any doubts, just contact me and we'll work something out.
+If you want to support my work financially, then that's nice and I'm flattered :) Please find a local NGO that helps cats and donate to them instead.
+
+In general, if you have any doubts, just contact me and we'll work something out. Unless you want to hold me liable for any damage you caused with this program, then don't.
 
 ## Contact with the author
 
