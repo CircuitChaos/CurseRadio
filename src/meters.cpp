@@ -51,7 +51,7 @@ static std::pair<double, std::string> interpolate(uint8_t raw, const std::vector
 	const double minNum(prev->numeric);
 	const double maxNum(next->numeric);
 
-	const double rawDelta((raw - minRaw) / (maxRaw - minRaw));
+	const double rawDelta((double) (raw - minRaw) / (maxRaw - minRaw));
 	const double numDiff(maxNum - minNum);
 	const double num(numDiff * rawDelta + minNum);
 
@@ -95,10 +95,25 @@ static std::string getAlc(uint8_t raw)
 	return util::format("%3.0f%%", interpolate(raw, cal).first);
 }
 
-static std::string getComp(uint8_t /* raw */)
+static std::string getComp(uint8_t raw)
 {
-	// TODO
-	return "TODO comp";
+	/* Done by counting pixels:
+	 *
+	 * 0  5  10  15  20  25  30
+	 * 0 22  37  49  61  73  87
+	 */
+
+	static const std::vector<CalEntry> cal = {
+	    {0, 0.0, ""},
+	    {22 * 255 / 87, 5.0, ""},
+	    {37 * 255 / 87, 10.0, ""},
+	    {49 * 255 / 87, 15.0, ""},
+	    {61 * 255 / 87, 20.0, ""},
+	    {73 * 255 / 87, 25.0, ""},
+	    {87 * 255 / 87, 30.0, ""},
+	};
+
+	return util::format("%4.1f dB", interpolate(raw, cal).first);
 }
 
 static std::string getPwr(uint8_t raw)
@@ -148,7 +163,6 @@ static std::string getIdd(uint8_t raw)
 	return util::format("%4.1f A", interpolate(raw, cal).first);
 }
 
-// TODO test it extensively if it really works because I suspect it might not
 std::string meters::getValue(Meter m, uint8_t raw)
 {
 	static const std::map<Meter, std::string (*)(uint8_t)> functions = {

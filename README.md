@@ -195,12 +195,6 @@ ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea70", ENV{ID_USB_INTERFACE_NUM}=="0
 
 Lots of things, because the program is in the very early phase.
 
-### High priority
-
-* Decoding of meters other than S-meter doesn't really work – IDD, SWR and ALC values aren't shown correctly
-* Map compressor levels to meaningful values
-* Implement CW cut numbers
-
 ### Tuning
 
 * Implement band limits per mode (so it's impossible to tune into CW part when doing SSB, etc.)
@@ -227,6 +221,7 @@ Lots of things, because the program is in the very early phase.
 
 ### CW
 
+* Implement CW cut numbers
 * Add preset sets (for example, different sets for fox and for hound)
 * Rethink the presets subsystem (it's not OK that they're hardcoded)
 * When sending text, show information about characters that couldn't be mapped to Morse
@@ -243,6 +238,7 @@ Lots of things, because the program is in the very early phase.
 * If wrong key is entered in 'm' and 'b' modes, newline is not printed before printing an error
 * Maybe it would be better to abort 'm' and 'b' commands by pressing Enter instead of backspace
 * Handle SIGWINCH – now the screen would probably get messed up if window size was changed
+* When status bar is updated, cursor is moved there. It should stay where it was, especially if editing text
 
 ### Radio control and CAT
 
