@@ -245,6 +245,7 @@ Lots of things, because the program is in the very early phase.
 * Maybe it would be better to abort 'm' and 'b' commands by pressing Enter instead of backspace
 * Handle SIGWINCH – now the screen would probably get messed up if window size was changed
 * When status bar is updated, cursor is moved there. It should stay where it was, especially if editing text
+* If certain things are turned off (like logging or CAT), disallow commands earlier (for example, right now you can run the program without radio connected, enter mode selection screen, select mode, and only then you get an error)
 
 ### Radio control and CAT
 

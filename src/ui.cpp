@@ -8,6 +8,7 @@
 #include "throw.h"
 #include "util.h"
 #include "ui.h"
+#include "keyer.h"
 
 Ui::Ui()
 {
@@ -332,7 +333,7 @@ UiEvt Ui::readMode(int ch)
 
 UiEvt Ui::readCheckCall(int ch)
 {
-	if(!handleTextInput(ch)) {
+	if(!handleTextInput(ch, true)) {
 		return UiEvt::EVT_NONE;
 	}
 
@@ -349,7 +350,7 @@ UiEvt Ui::readCheckCall(int ch)
 
 UiEvt Ui::readLog(int ch)
 {
-	if(!handleTextInput(ch)) {
+	if(!handleTextInput(ch, true)) {
 		return UiEvt::EVT_NONE;
 	}
 
@@ -375,7 +376,7 @@ UiEvt Ui::readLog(int ch)
 
 UiEvt Ui::readSendText(int ch)
 {
-	if(!handleTextInput(ch)) {
+	if(!handleTextInput(ch, false)) {
 		return UiEvt::EVT_NONE;
 	}
 
@@ -392,7 +393,7 @@ UiEvt Ui::readSendText(int ch)
 
 UiEvt Ui::readNote(int ch)
 {
-	if(handleTextInput(ch)) {
+	if(handleTextInput(ch, true)) {
 		setState(STATE_CMD);
 	}
 
@@ -555,7 +556,7 @@ void Ui::maybeRefresh()
 	}
 }
 
-bool Ui::handleTextInput(int ch)
+bool Ui::handleTextInput(int ch, bool allChars)
 {
 	if(ch == 0x0d) {
 		print("");
@@ -569,7 +570,7 @@ bool Ui::handleTextInput(int ch)
 		}
 	}
 
-	if(ch >= 0x20 && ch <= 0x7e) {
+	if(ch >= 0x20 && ch <= 0x7e && (allChars || Keyer::isCharAllowed(ch))) {
 		pendingText += std::string(1, ch);
 		printNoNL("%c", ch);
 	}

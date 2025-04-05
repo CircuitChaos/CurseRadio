@@ -115,7 +115,7 @@ private:
 	void leaveBlock();
 	void maybeRefresh();
 
-	bool handleTextInput(int ch);
+	bool handleTextInput(int ch, bool allChars);
 
 	UiEvt readCmd(int ch);
 	UiEvt readBand(int ch);

@@ -29,6 +29,8 @@ public:
 	unsigned wpmUp();
 	unsigned wpmDown();
 
+	static bool isCharAllowed(char ch);
+
 private:
 	unsigned wpm;
 	Timer timer;
