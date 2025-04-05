@@ -21,9 +21,11 @@ public:
 		EVT_FREQ_UP_SLOW,    /* right */
 		EVT_FREQ_UP_NORM,    /* up */
 		EVT_FREQ_UP_FAST,    /* pgup */
+		EVT_FREQ_UP_XFAST,   /* home */
 		EVT_FREQ_DOWN_SLOW,  /* left */
 		EVT_FREQ_DOWN_NORM,  /* down */
 		EVT_FREQ_DOWN_FAST,  /* pgdn */
+		EVT_FREQ_DOWN_XFAST, /* end */
 		EVT_FREQ_RESET,      /* = */
 		EVT_BAND,            /* b */
 		EVT_MODE,            /* m */
@@ -114,7 +116,6 @@ private:
 	void maybeRefresh();
 
 	bool handleTextInput(int ch);
-	void printKey(int ch);
 
 	UiEvt readCmd(int ch);
 	UiEvt readBand(int ch);

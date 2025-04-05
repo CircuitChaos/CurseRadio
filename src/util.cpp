@@ -104,3 +104,8 @@ std::set<int> util::watch(const std::set<int> &in, int timeout)
 	/* NOTREACHED */
 	return std::set<int>{};
 }
+
+std::string util::formatFreq(uint32_t freq)
+{
+	return format("%u.%03u kHz", freq / 1000, freq % 1000);
+}

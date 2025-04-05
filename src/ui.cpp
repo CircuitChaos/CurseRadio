@@ -82,7 +82,7 @@ void Ui::updateMeters(const std::map<meters::Meter, uint8_t> &meters, const std:
 	busyCharIndex %= busyChars.size();
 
 	if(freq && mode) {
-		prefix += util::format("%u.%03u kHz %s | ", freq.value() / 1000, freq.value() % 1000, getModeName(mode.value()).c_str());
+		prefix += util::format("%s %s | ", util::formatFreq(freq.value()).c_str(), getModeName(mode.value()).c_str());
 	}
 
 	std::vector<Meter> translatedMeters;
@@ -163,7 +163,6 @@ UiEvt Ui::read()
 
 UiEvt Ui::readCmd(int ch)
 {
-	printKey(ch);
 	switch(ch) {
 		case 'h':
 			help();
@@ -185,6 +184,9 @@ UiEvt Ui::readCmd(int ch)
 		case KEY_PPAGE:
 			return UiEvt::EVT_FREQ_UP_FAST;
 
+		case KEY_HOME:
+			return UiEvt::EVT_FREQ_UP_XFAST;
+
 		case KEY_LEFT:
 			return UiEvt::EVT_FREQ_DOWN_SLOW;
 
@@ -193,6 +195,9 @@ UiEvt Ui::readCmd(int ch)
 
 		case KEY_NPAGE:
 			return UiEvt::EVT_FREQ_DOWN_FAST;
+
+		case KEY_END:
+			return UiEvt::EVT_FREQ_DOWN_XFAST;
 
 		case '=':
 			return UiEvt::EVT_FREQ_RESET;
@@ -204,6 +209,12 @@ UiEvt Ui::readCmd(int ch)
 		case 'm':
 			setState(STATE_MODE);
 			break;
+
+		case 's':
+			return MODE_SSB_1;
+
+		case 'c':
+			return MODE_CW_1;
 
 		case 'v':
 			return UiEvt::EVT_SWAP;
@@ -226,7 +237,7 @@ UiEvt Ui::readCmd(int ch)
 		case 'x':
 			return UiEvt::EVT_SHOW_XCHG;
 
-		case 'c':
+		case 'k':
 			setState(STATE_CHECK_CALL);
 			break;
 
@@ -260,7 +271,6 @@ UiEvt Ui::readCmd(int ch)
 
 UiEvt Ui::readBand(int ch)
 {
-	printKey(ch);
 	setState(STATE_CMD);
 
 	static const std::map<int, std::pair<std::string, Band> > bands = {
@@ -295,7 +305,6 @@ UiEvt Ui::readBand(int ch)
 
 UiEvt Ui::readMode(int ch)
 {
-	printKey(ch);
 	setState(STATE_CMD);
 
 	static const std::map<int, std::pair<std::string, Mode> > modes = {
@@ -404,10 +413,13 @@ void Ui::help()
 	    "  left / right: slow tuning\n"
 	    "  up / down: normal tuning\n"
 	    "  pgup / pgdn: fast tuning\n"
+	    "  home / end: extra fast tuning\n"
 	    "  =: reset frequency\n"
 	    "  b: select band\n"
 	    "  m: select mode\n"
 	    "  v: swap VFO\n"
+	    "  s: select SSB mode (equivalent of ms)\n"
+	    "  c: select CW mode (equivalent of mc)\n"
 	    "\n"
 	    "Presets:\n"
 	    "  p: show presets\n"
@@ -415,7 +427,7 @@ void Ui::help()
 	    "\n"
 	    "Logging and contesting:\n"
 	    "  x: show next exchange\n"
-	    "  c: check callsign\n"
+	    "  k: check callsign\n"
 	    "  l: log QSO\n"
 	    "\n"
 	    "CW:\n"
@@ -464,7 +476,6 @@ void Ui::setState(State newState)
 			print("  g: generic");
 			print("  m: MW");
 			print("  bksp: abort selection");
-			printNoNL("band>");
 			leaveBlock();
 			break;
 		}
@@ -478,7 +489,6 @@ void Ui::setState(State newState)
 			print("  f: FM");
 			print("  a: AM");
 			print("  bksp: abort selection");
-			printNoNL("mode>");
 			leaveBlock();
 			break;
 
@@ -559,38 +569,10 @@ bool Ui::handleTextInput(int ch)
 		}
 	}
 
-	if((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch == ' ') {
+	if(ch >= 0x20 && ch <= 0x7e) {
 		pendingText += std::string(1, ch);
 		printNoNL("%c", ch);
 	}
 
 	return false;
-}
-
-void Ui::printKey(int ch)
-{
-	/* Only some keys are printed here */
-	if((ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) {
-		print("%c", ch);
-		return;
-	}
-
-	static const std::map<int, std::string> keyMap = {
-	    {KEY_DOWN, "down"},
-	    {KEY_UP, "up"},
-	    {KEY_LEFT, "left"},
-	    {KEY_RIGHT, "right"},
-	    {KEY_PPAGE, "pgup"},
-	    {KEY_NPAGE, "pgdn"},
-	    {KEY_HOME, "home"},
-	    {KEY_END, "end"},
-	    {0x08, "bksp"},
-	};
-
-	const std::map<int, std::string>::const_iterator i(keyMap.find(ch));
-	if(i == keyMap.end()) {
-		return;
-	}
-
-	print("%s", i->second.c_str());
 }

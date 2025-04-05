@@ -15,6 +15,7 @@ static const unsigned CAT_TIMEOUT         = 2000;
 static const int32_t TUNE_INCREMENT_SLOW  = 10;
 static const int32_t TUNE_INCREMENT_NORM  = 100;
 static const int32_t TUNE_INCREMENT_FAST  = 1000;
+static const int32_t TUNE_INCREMENT_XFAST = 10000;
 
 void CurseRadio::run(const Cli &cli)
 {
@@ -90,9 +91,11 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 		case UiEvt::EVT_FREQ_UP_SLOW:
 		case UiEvt::EVT_FREQ_UP_NORM:
 		case UiEvt::EVT_FREQ_UP_FAST:
+		case UiEvt::EVT_FREQ_UP_XFAST:
 		case UiEvt::EVT_FREQ_DOWN_SLOW:
 		case UiEvt::EVT_FREQ_DOWN_NORM:
 		case UiEvt::EVT_FREQ_DOWN_FAST:
+		case UiEvt::EVT_FREQ_DOWN_XFAST:
 		case UiEvt::EVT_FREQ_RESET: {
 			if(!cat) {
 				ui.print("CAT disabled");
@@ -121,6 +124,10 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 					increment = TUNE_INCREMENT_FAST;
 					break;
 
+				case UiEvt::EVT_FREQ_UP_XFAST:
+					increment = TUNE_INCREMENT_XFAST;
+					break;
+
 				case UiEvt::EVT_FREQ_DOWN_SLOW:
 					increment = -TUNE_INCREMENT_SLOW;
 					break;
@@ -131,6 +138,10 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 
 				case UiEvt::EVT_FREQ_DOWN_FAST:
 					increment = -TUNE_INCREMENT_FAST;
+					break;
+
+				case UiEvt::EVT_FREQ_DOWN_XFAST:
+					increment = -TUNE_INCREMENT_XFAST;
 					break;
 
 				case UiEvt::EVT_FREQ_RESET:
@@ -152,7 +163,6 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 				}
 			}
 
-			ui.print("Setting frequency to %d.%03d kHz", newFreq / 1000, newFreq % 1000);
 			cat->setFreq(newFreq);
 			curFreq = newFreq;
 			break;
@@ -355,7 +365,13 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 				break;
 			}
 
-			ui.print("Zeroing in");
+			if(curFreq) {
+				ui.print("Zeroing in from %s", util::formatFreq(curFreq.value()).c_str());
+			}
+			else {
+				ui.print("Zeroing in");
+			}
+
 			cat->zin();
 			break;
 

@@ -17,5 +17,6 @@ std::string toUpper(const std::string &s);
 std::string toLower(const std::string &s);
 std::vector<std::string> tokenize(const std::string &s, const std::string &sep, size_t count);
 std::set<int> watch(const std::set<int> &in, int timeout);
+std::string formatFreq(uint32_t freq);
 
 } // namespace util

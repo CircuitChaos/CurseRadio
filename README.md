@@ -61,9 +61,10 @@ Program is controlled from the keyboard. Press 'h' to see a list of keys, or 'q'
 
 Frequency control:
 
-* left/right arrows: slow tuning (currently 10 Hz steps)
-* up/down arrows: normal tuning (currently 100 Hz steps)
-* pgup/pgdown: fast tuning (currently 1000 Hz steps)
+* left/right arrows: slow tuning (10 Hz steps)
+* up/down arrows: normal tuning (100 Hz steps)
+* pgup/pgdown: fast tuning (1 kHz steps)
+* home/end: extra fast tuning (10 kHz steps)
 * =: reset frequency to the lowest possible value for given band
 
 Hint: frequency limits are defined in `band.cpp` and they're valid for IARU region 1. If your region has different limits, feel free to change them.
@@ -82,7 +83,7 @@ Note that you don't have to use 'b' or 'm'. Switching the band and mode with the
 
 * x: shows current (next) exchange. Useful when you want to pick up the microphone and tell the number, but you don't remember it. This exchange will then be logged (and possibly incremented) when you press 'l'.
 
-* c: checks if the callsign is already in the log. Press 'c', type the callsign (lowercase or uppercase, doesn't matter), and the program will scan the CBR file, telling you if the callsign is in the log or not.
+* k: checks if the callsign is already in the log. Press 'c', type the callsign (lowercase or uppercase, doesn't matter), and the program will scan the CBR file, telling you if the callsign is in the log or not.
 
 In the future, maybe all QSOs found with this callsign will be printed as well. Another thing that's left to be done is checking this callsign in a list of known callsigns (for example, callsigns that participated in contests in previous years), to spot misspelled callsigns.
 
@@ -97,6 +98,10 @@ Note that current time is stored when you press 'l', not when you actually type 
 * u and d: increases and decreases built-in CW keyer speed.
 
 * z: zero-ins on the CW frequency. It just sends the command to the radio. It's equivalent to pressing the ZIN button.
+
+* s: select SSB mode (equivalent of ms)
+
+* c: select CW mode (equivalent of mc)
 
 ## Presets
 
@@ -204,6 +209,7 @@ Lots of things, because the program is in the very early phase.
 * Check if tuning steps for CW are reasonable, maybe different steps should be done for CW and for SSB?
 * Consider removing the 1 Hz part from the frequency when tuning (maybe as an option) – so if the frequency is, say, 14123.456 kHz, and left arrow is pressed, it's now changed to 14123.446 kHz, but maybe should be changed to 14123.440 kHz
 * Add frequency presets, or at least one default frequency (set from CLI)
+* Automatically switch modes (CW / SSB) when moving between ranges (as an option)
 
 ### Logging
 
