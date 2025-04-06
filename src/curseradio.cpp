@@ -438,6 +438,7 @@ void CurseRadio::catEvt(const CatEvt &evt)
 					break;
 
 				case meters::METER_SWR:
+					schedMeters[evt.meter.value().first] = evt.meter.value().second;
 					ui.updateMeters(schedMeters, curFreq, curMode);
 					schedMeters.clear();
 					catMeterTimer->start();
