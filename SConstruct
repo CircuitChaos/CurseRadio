@@ -7,9 +7,10 @@ def getGitHash():
     return getGitCommand('rev-parse --short HEAD')
 
 env = Environment()
-env['CCFLAGS']	= '-Wall -Wextra -std=c++17 -O2 -march=native -g -DGIT_HASH=' + getGitHash()
-env['CPPPATH']	= 'src'
-env['LIBS'] = 'ncurses'
+env['CCFLAGS']		= '-Wall -Wextra -std=c++17 -O2 -march=native -g -DGIT_HASH=' + getGitHash()
+env['LINKFLAGS']	= '-pthread'
+env['CPPPATH']		= 'src'
+env['LIBS']		= 'ncurses'
 
 env.VariantDir('build', 'src', duplicate = 0)
 env.AlwaysBuild(['build/version.o', 'build/curseradio'])
