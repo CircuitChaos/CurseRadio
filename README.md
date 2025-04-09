@@ -261,6 +261,7 @@ Lots of things, because the program is in the very early phase.
 * Add option to change output power (all power settings) from the UI
 * The way CAT is currently implemented, gotEvent() function might trip an exception sometimes (although it never happened to me). If you receive „Got CAT event ..., but not expecting any” or „Got CAT event ..., but expecting ... first” errors, make sure to contact me – it might need to be redesigned
 * Add an option to log CAT traffic for debugging
+* Add fan control (normal / contest)
 
 ### Rest
 
