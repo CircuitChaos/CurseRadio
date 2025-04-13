@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "band.h"
 #include "mode.h"
+#include "fanmode.h"
 #include "meters.h"
 
 struct CatEvt {
@@ -42,6 +43,7 @@ public:
 	void getMode();
 	void setBand(Band band);
 	void setMode(Mode mode);
+	void setFanMode(FanMode fanMode);
 	void swapVfo();
 	void zin();
 

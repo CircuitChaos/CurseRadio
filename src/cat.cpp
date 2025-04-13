@@ -209,6 +209,12 @@ void Cat::setMode(Mode mode)
 	send("MD0%X", i->second);
 }
 
+void Cat::setFanMode(FanMode fanMode)
+{
+	xassert(fanMode == FAN_MODE_NORMAL || fanMode == FAN_MODE_CONTEST, "Unknown fan mode %d", fanMode);
+	send("EX0520%d", (fanMode == FAN_MODE_CONTEST) ? 1 : 0);
+}
+
 void Cat::swapVfo()
 {
 	send("SV");

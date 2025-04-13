@@ -8,6 +8,7 @@
 #include "meters.h"
 #include "band.h"
 #include "mode.h"
+#include "fanmode.h"
 
 struct UiEvt {
 public:
@@ -30,6 +31,7 @@ public:
 		EVT_BAND,            /* b */
 		EVT_MODE,            /* m */
 		EVT_SWAP,            /* v */
+		EVT_FAN_MODE,        /* f */
 
 		/* Presets */
 		EVT_SHOW_PRESETS, /* p */
@@ -52,6 +54,7 @@ public:
 	const EventType type;
 	const std::optional<Band> band;           /* EVT_BAND */
 	const std::optional<Mode> mode;           /* EVT_MODE */
+	const std::optional<FanMode> fanMode;     /* EVT_FAN_MODE */
 	const std::optional<unsigned> preset;     /* EVT_SEND_PRESET */
 	const std::optional<std::string> logCall; /* EVT_LOG */
 	const std::optional<std::string> logRst;  /* EVT_LOG (and might not be present) */
@@ -67,6 +70,9 @@ public:
 
 	UiEvt(Mode mode)
 	    : type(EVT_MODE), mode(mode) {}
+
+	UiEvt(FanMode fanMode)
+	    : type(EVT_FAN_MODE), fanMode(fanMode) {}
 
 	UiEvt(unsigned preset)
 	    : type(EVT_SEND_PRESET), preset(preset) {}
@@ -94,6 +100,7 @@ private:
 		STATE_CMD,
 		STATE_BAND,
 		STATE_MODE,
+		STATE_FAN_MODE,
 		STATE_CHECK_CALL,
 		STATE_LOG,
 		STATE_SEND_TEXT,
@@ -120,6 +127,7 @@ private:
 	UiEvt readCmd(int ch);
 	UiEvt readBand(int ch);
 	UiEvt readMode(int ch);
+	UiEvt readFanMode(int ch);
 	UiEvt readCheckCall(int ch);
 	UiEvt readLog(int ch);
 	UiEvt readSendText(int ch);

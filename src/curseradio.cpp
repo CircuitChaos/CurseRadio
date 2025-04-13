@@ -190,6 +190,17 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 			cat->setMode(evt.mode.value());
 			break;
 
+		case UiEvt::EVT_FAN_MODE:
+			xassert(evt.fanMode, "Fan mode expected, but not found");
+
+			if(!cat) {
+				ui.print("CAT disabled");
+				break;
+			}
+
+			cat->setFanMode(evt.fanMode.value());
+			break;
+
 		case UiEvt::EVT_SWAP:
 			if(!cat) {
 				ui.print("CAT disabled");

@@ -144,6 +144,9 @@ UiEvt Ui::read()
 		case STATE_MODE:
 			return readMode(ch);
 
+		case STATE_FAN_MODE:
+			return readFanMode(ch);
+
 		case STATE_CHECK_CALL:
 			return readCheckCall(ch);
 
@@ -209,6 +212,10 @@ UiEvt Ui::readCmd(int ch)
 
 		case 'm':
 			setState(STATE_MODE);
+			break;
+
+		case 'f':
+			setState(STATE_FAN_MODE);
 			break;
 
 		case 's':
@@ -331,6 +338,31 @@ UiEvt Ui::readMode(int ch)
 	return i->second.second;
 }
 
+UiEvt Ui::readFanMode(int ch)
+{
+	setState(STATE_CMD);
+
+	switch(ch) {
+		case 0x08:
+			print("Mode selection abandoned");
+			return UiEvt::EVT_NONE;
+
+		case 'n':
+			print("Setting normal fan mode");
+			return FAN_MODE_NORMAL;
+
+		case 'c':
+			print("Setting contest fan mode");
+			return FAN_MODE_CONTEST;
+
+		default:
+			break;
+	}
+
+	print("Unknown key pressed -- fan mode selection abandoned");
+	return UiEvt::EVT_NONE;
+}
+
 UiEvt Ui::readCheckCall(int ch)
 {
 	if(!handleTextInput(ch, true)) {
@@ -418,6 +450,7 @@ void Ui::help()
 	    "  =: reset frequency\n"
 	    "  b: select band\n"
 	    "  m: select mode\n"
+	    "  f: select fan mode (normal / contest)\n"
 	    "  v: swap VFO\n"
 	    "  s: select SSB mode (equivalent of ms)\n"
 	    "  c: select CW mode (equivalent of mc)\n"
@@ -489,6 +522,15 @@ void Ui::setState(State newState)
 			print("  d: data");
 			print("  f: FM");
 			print("  a: AM");
+			print("  bksp: abort selection");
+			leaveBlock();
+			break;
+
+		case STATE_FAN_MODE:
+			enterBlock();
+			print("Select fan mode:");
+			print("  n: normal");
+			print("  c: contest");
 			print("  bksp: abort selection");
 			leaveBlock();
 			break;
