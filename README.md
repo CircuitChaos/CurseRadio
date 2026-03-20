@@ -75,6 +75,8 @@ Hint: frequency limits are defined in `band.cpp` and they're valid for IARU regi
 
 Note that you don't have to use 'b' or 'm'. Switching the band and mode with the radio's BAND button is sufficient – the program will read it automatically after at most 100 ms.
 
+* f: allows to set fan mode (normal / contest)
+
 * v: swaps VFOs (A with B, and B with A) and their respective modes.
 
 * p: shows a list of CW presets. See the section about presets for detail.
@@ -159,6 +161,7 @@ Commands implemented:
 * BSnn: set band
 * SV: swap VFO
 * ZI: zero-in
+* EX0520n: set fan mode
 
 For numbers encoding specific meters, bands and modes, refer to `cat.cpp` (meterMap, bandMap, modeMap).
 
@@ -246,6 +249,8 @@ Lots of things, because the program is in the very early phase.
 * Handle SIGWINCH – now the screen would probably get messed up if window size was changed
 * When status bar is updated, cursor is moved there. It should stay where it was, especially if editing text
 * If certain things are turned off (like logging or CAT), disallow commands earlier (for example, right now you can run the program without radio connected, enter mode selection screen, select mode, and only then you get an error)
+* If = is pressed when outside of band, it shouldn't do anything
+* Change log search to print all QSOs logged with given call, not only single one
 
 ### Radio control and CAT
 
@@ -261,7 +266,6 @@ Lots of things, because the program is in the very early phase.
 * Add option to change output power (all power settings) from the UI
 * The way CAT is currently implemented, gotEvent() function might trip an exception sometimes (although it never happened to me). If you receive „Got CAT event ..., but not expecting any” or „Got CAT event ..., but expecting ... first” errors, make sure to contact me – it might need to be redesigned
 * Add an option to log CAT traffic for debugging
-* Add fan control (normal / contest)
 
 ### Rest
 
@@ -272,6 +276,7 @@ Lots of things, because the program is in the very early phase.
 * select() timeout is not recalculated in util::watch() function if EAGAIN or EINTR are received. In current implementation it doesn't matter, because we don't rely on this timeout (timeouts are implemented separately), but it's not the best way to code things. Maybe remove support for timeout in this function altogether
 * Sort this TODO list, now it's very chaotic
 * Add some license
+* Add undo option
 
 ## Safety and license
 
