@@ -17,3 +17,12 @@ Fd::operator int() const
 {
 	return fd;
 }
+
+void Fd::reset(int newfd)
+{
+	if(fd != -1) {
+		close(fd);
+	}
+
+	fd = newfd;
+}

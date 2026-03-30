@@ -21,6 +21,8 @@ void Cli::help()
 	    "  -P <prefix>: contest exchange prefix\n"
 	    "  -I <infix>: contest exchange infix\n"
 	    "  -S <suffix>: contest exchange suffix\n"
+	    "  -U <host>: UDP broadcast host\n"
+	    "  -u <port>: UDP broadcast port\n"
 	    "\n"
 	    "Exchange prefix and suffix are fixed parts of the exchange. They can \n"
 	    "be skipped if only numbers are exchanged.\n"
@@ -36,7 +38,10 @@ void Cli::help()
 	    "\n"
 	    "If callsign is not specified, then presets and logging will be disabled.\n"
 	    "If Cabrillo file is not specified, then logging will be disabled.\n"
-	    "If CAT port is not specified, then radio functions will be disabled.";
+	    "If CAT port is not specified, then radio functions will be disabled.\n"
+	    "\n"
+	    "UDP broadcast is for integration with remote ATU. More info in future\n"
+	    "versions.\n";
 
 	version();
 	puts(helpstr);
@@ -51,7 +56,7 @@ void Cli::version()
 Cli::Cli(int argc, char *const argv[])
 {
 	int opt;
-	while((opt = getopt(argc, argv, ":hvs:f:c:b:p:w:P:I:S:")) != -1 && !exitFlag) {
+	while((opt = getopt(argc, argv, ":hvs:f:c:b:p:w:P:I:S:U:u:")) != -1 && !exitFlag) {
 		switch(opt) {
 			case '?':
 				xthrow("-%c: option not recognized", optopt);
@@ -109,6 +114,14 @@ Cli::Cli(int argc, char *const argv[])
 				suffix = optarg;
 				break;
 
+			case 'U':
+				bcastHost = optarg;
+				break;
+
+			case 'u':
+				bcastPort = optarg;
+				break;
+
 			default:
 				xthrow("Unknown value returned by getopt(): %d", opt);
 				break;
@@ -161,6 +174,16 @@ std::string Cli::getInfix() const
 std::string Cli::getSuffix() const
 {
 	return suffix;
+}
+
+std::string Cli::getBcastHost() const
+{
+	return bcastHost;
+}
+
+std::string Cli::getBcastPort() const
+{
+	return bcastPort;
 }
 
 unsigned Cli::getWpm() const

@@ -1,5 +1,6 @@
 #include <ctime>
 #include <map>
+#include <cstring>
 #include "logger.h"
 #include "file.h"
 #include "util.h"
@@ -49,13 +50,17 @@ std::string Logger::log(const Entry &e)
 	return s;
 }
 
-bool Logger::exists(const std::string &call)
+bool Logger::checkIfExists(Ui *ui, const std::string &call, bool exactMatch) const
 {
 	const File fp(fopen(cbrFile.c_str(), "r"));
 	if(!fp) {
+		if(ui) {
+			ui->print("Callsign %s not in log -- logfile not found", call.c_str());
+		}
 		return false;
 	}
 
+	bool found = false;
 	for(;;) {
 		char buf[1024];
 		fgets(buf, sizeof(buf), fp);
@@ -63,12 +68,24 @@ bool Logger::exists(const std::string &call)
 			break;
 		}
 
-		/* newline is retained but it doesn't matter */
+		buf[strcspn(buf, "\n")] = 0;
+		buf[strcspn(buf, "\r")] = 0;
+
 		const std::vector<std::string> tok(util::tokenize(util::toUpper(buf), " ", 0));
-		if(tok.size() == 11 && tok[0] == "QSO:" && tok[8] == util::toUpper(call)) {
-			return true;
+		if(tok.size() == 11 && tok[0] == "QSO:" && (exactMatch ? (tok[8] == util::toUpper(call)) : (tok[8].find(util::toUpper(call)) != std::string::npos))) {
+			if(ui) {
+				ui->print("Call %s found: %s", call.c_str(), buf);
+				found = true;
+			}
+			else {
+				return true;
+			}
 		}
 	}
 
-	return false;
+	if(!found && ui) {
+		ui->print("Callsign %s not in log", call.c_str());
+	}
+
+	return found;
 }

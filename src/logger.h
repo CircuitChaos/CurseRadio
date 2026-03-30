@@ -4,6 +4,7 @@
 #include <ctime>
 #include <cstdint>
 #include "mode.h"
+#include "ui.h"
 
 class Logger {
 public:
@@ -21,7 +22,7 @@ public:
 	Logger(const std::string &call, const std::string &cbrFile);
 
 	std::string log(const Entry &e);
-	bool exists(const std::string &call);
+	bool checkIfExists(Ui *ui, const std::string &call, bool exactMatch) const;
 
 private:
 	const std::string call;

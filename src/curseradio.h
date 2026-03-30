@@ -12,6 +12,7 @@
 #include "logger.h"
 #include "mode.h"
 #include "meters.h"
+#include "broadcaster.h"
 
 class CurseRadio {
 public:
@@ -27,6 +28,7 @@ private:
 	std::unique_ptr<Ptt> ptt;
 	std::unique_ptr<Keyer> keyer;
 	std::unique_ptr<Logger> logger;
+	std::unique_ptr<Broadcaster> bcast;
 
 	std::optional<uint32_t> curFreq;  /* Current frequency, updated by CAT meter timer */
 	std::optional<Mode> curMode;      /* Current mode, updated by CAT meter timer */
@@ -39,4 +41,6 @@ private:
 	bool uiEvt(const UiEvt &evt);
 	void catEvt(const CatEvt &evt);
 	void keyerEvt(const KeyerEvt &evt);
+	void broadcastFreq();
+	void broadcastMode();
 };

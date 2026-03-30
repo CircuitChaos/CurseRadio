@@ -220,13 +220,12 @@ Lots of things, because the program is in the very early phase.
 * Allow logging into other formats than Cabrillo (ADI, maybe also my tlog, when it's finally published)
 * Log editing (at least last entry)
 * Info about number of QSOs in the log file
-* In 'c' mode, show all QSO lines
 * Option to check current frequency in log too (if it's already in log)
-* Wildcards when checking if the callsign is in the log
 * Command to decrement exchange
 * Handle RY (RTTY) mode in CBR – maybe add a CLI option to override mode in CBR? Right now data modes are logged as DG
 * AM mode is unsupported in the logger (CBR doesn't support it), but supported by the program – think how best to solve this
 * Allow having a file with known callsigns (for example callsigns used in previous contests) for easier callsign misspelling detection
+* Allow regex in 'k' mode
 
 ### CW
 
@@ -242,8 +241,10 @@ Lots of things, because the program is in the very early phase.
 * Allow remapping of keys (now they're hardcoded)
 * Add TX statistics when switching to RX (max power, max SWR, etc.)
 * Some peak mode for meters
+* Show next exchange in the status bar
 * First refresh erases the screen – why?
 * UI is now too verbose – don't print frequency changes, don't print certain keys (or print no keys at all), declutter the interface
+* Allow scrolling of the window
 * If wrong key is entered in 'm' and 'b' modes, newline is not printed before printing an error
 * Maybe it would be better to abort 'm' and 'b' commands by pressing Enter instead of backspace
 * Handle SIGWINCH – now the screen would probably get messed up if window size was changed
@@ -277,6 +278,7 @@ Lots of things, because the program is in the very early phase.
 * Sort this TODO list, now it's very chaotic
 * Add some license
 * Add undo option
+* Document UDP broadcast sender as it's part of a bigger solution
 
 ## Safety and license
 

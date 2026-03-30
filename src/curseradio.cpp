@@ -52,6 +52,10 @@ void CurseRadio::run(const Cli &cli)
 		logger.reset(new Logger(cli.getCallsign(), cli.getCbrFile()));
 	}
 
+	if(!cli.getBcastHost().empty() && !cli.getBcastPort().empty()) {
+		bcast.reset(new Broadcaster(cli.getBcastHost(), cli.getBcastPort()));
+	}
+
 	for(;;) {
 		const std::set<int> outrfds(util::watch(inrfds, -1));
 		if(util::inSet(outrfds, ui.getFd()) && uiEvt(ui.read())) {
@@ -77,6 +81,32 @@ void CurseRadio::run(const Cli &cli)
 			xthrow("CAT timeout");
 		}
 	}
+}
+
+void CurseRadio::broadcastFreq()
+{
+	xassert(curFreq, "Expecting frequency at this point");
+
+	if(!bcast) {
+		return;
+	}
+
+	BroadcastPacket p("freq_rsp");
+	p.add("freq", util::format("%u", curFreq.value()));
+	bcast->sendPacket(p);
+}
+
+void CurseRadio::broadcastMode()
+{
+	xassert(curMode, "Expecting mode at this point");
+
+	if(!bcast) {
+		return;
+	}
+
+	BroadcastPacket p("mode_rsp");
+	p.add("mode", getModeName(curMode.value()));
+	bcast->sendPacket(p);
 }
 
 bool CurseRadio::uiEvt(const UiEvt &evt)
@@ -260,12 +290,7 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 				break;
 			}
 
-			if(logger->exists(evt.checkCall.value())) {
-				ui.print("Callsign %s already in log", evt.checkCall.value().c_str());
-			}
-			else {
-				ui.print("Callsign %s not in log", evt.checkCall.value().c_str());
-			}
+			logger->checkIfExists(&ui, evt.checkCall.value(), false);
 			break;
 
 		case UiEvt::EVT_LOG: {
@@ -281,7 +306,7 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 				break;
 			}
 
-			if(logger->exists(evt.logCall.value())) {
+			if(logger->checkIfExists(nullptr, evt.logCall.value(), true)) {
 				ui.print("Warning: call %s already exists in log", evt.logCall.value().c_str());
 			}
 
@@ -464,12 +489,14 @@ void CurseRadio::catEvt(const CatEvt &evt)
 		case CatEvt::EVT_FREQ:
 			xassert(evt.freq, "Expecting frequency in event");
 			curFreq = evt.freq;
+			broadcastFreq();
 			cat->getMode();
 			break;
 
 		case CatEvt::EVT_MODE:
 			xassert(evt.mode, "Expecting mode in event");
 			curMode = evt.mode;
+			broadcastMode();
 			ui.updateMeters(schedMeters, curFreq, curMode);
 			schedMeters.clear();
 			catMeterTimer->start();

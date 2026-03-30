@@ -15,6 +15,8 @@ public:
 	std::string getPrefix() const;
 	std::string getInfix() const;
 	std::string getSuffix() const;
+	std::string getBcastHost() const;
+	std::string getBcastPort() const;
 	unsigned getWpm() const;
 
 private:
@@ -27,6 +29,8 @@ private:
 	std::string prefix;
 	std::string infix;
 	std::string suffix;
+	std::string bcastHost;
+	std::string bcastPort;
 	unsigned wpm{0};
 
 	void help();
