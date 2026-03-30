@@ -226,6 +226,7 @@ Lots of things, because the program is in the very early phase.
 * AM mode is unsupported in the logger (CBR doesn't support it), but supported by the program – think how best to solve this
 * Allow having a file with known callsigns (for example callsigns used in previous contests) for easier callsign misspelling detection
 * Allow regex in 'k' mode
+* Pre-fill 'l' with callsign checked with 'k'
 
 ### CW
 
@@ -250,8 +251,9 @@ Lots of things, because the program is in the very early phase.
 * Handle SIGWINCH – now the screen would probably get messed up if window size was changed
 * When status bar is updated, cursor is moved there. It should stay where it was, especially if editing text
 * If certain things are turned off (like logging or CAT), disallow commands earlier (for example, right now you can run the program without radio connected, enter mode selection screen, select mode, and only then you get an error)
-* If = is pressed when outside of band, it shouldn't do anything
-* Change log search to print all QSOs logged with given call, not only single one
+* If '=' is pressed when outside of band, it shouldn't do anything
+* Show shortened band plan when switching bands and/or modes
+* '=' goes to the beginning of the band, add key to go to the end
 
 ### Radio control and CAT
 
