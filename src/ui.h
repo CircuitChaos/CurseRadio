@@ -93,6 +93,7 @@ public:
 	UiEvt read();
 	void print(const char *fmt, ...);
 	void printNoNL(const char *fmt, ...);
+	void printPrompt(const std::string &prompt);
 	void updateMeters(const std::map<meters::Meter, uint8_t> &meters, const std::optional<uint32_t> &freq, const std::optional<Mode> &mode);
 
 private:
@@ -132,4 +133,6 @@ private:
 	UiEvt readLog(int ch);
 	UiEvt readSendText(int ch);
 	UiEvt readNote(int ch);
+
+	void printWithAttr(short pair, bool bold, bool dorefresh, const std::string &text);
 };

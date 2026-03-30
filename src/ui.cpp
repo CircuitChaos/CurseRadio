@@ -10,6 +10,11 @@
 #include "ui.h"
 #include "keyer.h"
 
+static const short PAIR_TEXT          = 1;
+static const short PAIR_PROMPT        = 2;
+static const short PAIR_PROMPTED_TEXT = 3;
+static const short PAIR_STATUS        = 4;
+
 Ui::Ui()
 {
 	xassert(initscr(), "initscr() call failed");
@@ -22,8 +27,13 @@ Ui::Ui()
 	xassert((mainWin = newwin(LINES - 1, COLS, 1, 0)) != nullptr, "newwin() failed");
 	xassert(scrollok(mainWin, TRUE) != ERR, "scrollok() call failed");
 	xassert(start_color() != ERR, "start_color() call failed");
-	xassert(init_pair(1, COLOR_WHITE, COLOR_BLUE) != ERR, "init_pair() call failed");
-	xassert(wbkgd(metersWin, COLOR_PAIR(1)) != ERR, "wbkgd() call failed");
+	xassert(init_pair(PAIR_TEXT, COLOR_WHITE, COLOR_BLACK) != ERR, "init_pair() failed");
+	xassert(init_pair(PAIR_PROMPT, COLOR_GREEN, COLOR_BLACK) != ERR, "init_pair() failed");
+	xassert(init_pair(PAIR_PROMPTED_TEXT, COLOR_WHITE, COLOR_BLACK) != ERR, "init_pair() failed");
+	xassert(init_pair(PAIR_STATUS, COLOR_WHITE, COLOR_BLUE) != ERR, "init_pair() call failed");
+	xassert(wbkgd(metersWin, COLOR_PAIR(PAIR_STATUS)) != ERR, "wbkgd() call failed");
+	wattron(mainWin, COLOR_PAIR(PAIR_TEXT));
+	wattroff(mainWin, A_BOLD);
 	print("Press 'h' for help, 'q' to quit");
 }
 
@@ -52,6 +62,12 @@ void Ui::print(const char *fmt, ...)
 
 	xassert(wprintw(mainWin, "%s\n", s.c_str()) != ERR, "wprintw() call failed");
 	maybeRefresh();
+}
+
+void Ui::printPrompt(const std::string &prompt)
+{
+	printWithAttr(PAIR_PROMPT, true, false, prompt);
+	printWithAttr(PAIR_PROMPT, false, true, ">");
 }
 
 void Ui::printNoNL(const char *fmt, ...)
@@ -538,7 +554,7 @@ void Ui::setState(State newState)
 		case STATE_CHECK_CALL:
 			enterBlock();
 			print("Enter callsign to check. Empty string will abort checking");
-			printNoNL("call>");
+			printPrompt("call");
 			leaveBlock();
 			pendingText.clear();
 			break;
@@ -547,7 +563,7 @@ void Ui::setState(State newState)
 			enterBlock();
 			print("Enter callsign and exchange, or callsign, report and exchange (call xchg, call rst xchg)");
 			print("Empty string will abort log entry");
-			printNoNL("log>");
+			printPrompt("log");
 			leaveBlock();
 			pendingText.clear();
 			break;
@@ -555,7 +571,7 @@ void Ui::setState(State newState)
 		case STATE_SEND_TEXT:
 			enterBlock();
 			print("Enter text to send. Empty string will abort sending");
-			printNoNL("text>");
+			printPrompt("text");
 			leaveBlock();
 			pendingText.clear();
 			break;
@@ -563,7 +579,7 @@ void Ui::setState(State newState)
 		case STATE_NOTE:
 			enterBlock();
 			print("Enter note, it will be ignored");
-			printNoNL("note>");
+			printPrompt("note");
 			leaveBlock();
 			pendingText.clear();
 			break;
@@ -613,9 +629,24 @@ bool Ui::handleTextInput(int ch, bool allChars)
 	}
 
 	if(ch >= 0x20 && ch <= 0x7e && (allChars || Keyer::isCharAllowed(ch))) {
-		pendingText += std::string(1, ch);
-		printNoNL("%c", ch);
+		const std::string s = std::string(1, ch);
+		pendingText += s;
+		printWithAttr(PAIR_PROMPTED_TEXT, true, true, s);
 	}
 
 	return false;
+}
+
+void Ui::printWithAttr(short pair, bool bold, bool dorefresh, const std::string &text)
+{
+	wattron(mainWin, COLOR_PAIR(pair) | (bold ? A_BOLD : 0));
+	xassert(wprintw(mainWin, "%s", text.c_str()) != ERR, "wprintw() call failed");
+	wattron(mainWin, COLOR_PAIR(PAIR_TEXT));
+	if(bold) {
+		wattroff(mainWin, A_BOLD);
+	}
+
+	if(dorefresh) {
+		maybeRefresh();
+	}
 }
