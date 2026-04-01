@@ -6,6 +6,7 @@
 Ptt::Ptt(const std::string &pttPort)
     : fd(open(pttPort.c_str(), O_RDWR | O_NOCTTY))
 {
+	xassert(fd >= 0, "Could not open ptt port %s: %m", pttPort.c_str());
 	xassert(setDtr(false), "Could not clear DTR: %m");
 }
 

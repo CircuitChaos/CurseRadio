@@ -25,6 +25,7 @@ static const std::vector<Entry> bands = {
     {BAND_10, 28000, 29700},
     {BAND_6, 50000, 54000},
     {BAND_GEN, 30, 56000},
+    // BAND_MW -- what are the limits?
 };
 
 static const Entry &getByBand(Band band)

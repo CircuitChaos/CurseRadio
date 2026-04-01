@@ -40,6 +40,7 @@ void Keyer::send(const std::string &s)
 {
 	xassert(!s.empty(), "Refusing to send empty string");
 
+	const bool sending = isSending();
 	const std::string morseString(stringToMorse(s));
 	for(std::string::const_iterator i(morseString.begin()); i != morseString.end(); ++i) {
 		switch(*i) {
@@ -68,7 +69,9 @@ void Keyer::send(const std::string &s)
 		}
 	}
 
-	next();
+	if(!sending) {
+		next();
+	}
 }
 
 void Keyer::abortSending()

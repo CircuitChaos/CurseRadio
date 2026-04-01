@@ -88,6 +88,10 @@ void Ui::printNoNL(const char *fmt, ...)
 
 void Ui::updateMeters(const std::map<meters::Meter, uint8_t> &meters, const std::optional<uint32_t> &freq, const std::optional<Mode> &mode)
 {
+	if(meters.empty()) {
+		return;
+	}
+
 	struct Meter {
 		std::string name;
 		uint8_t raw;
@@ -119,7 +123,10 @@ void Ui::updateMeters(const std::map<meters::Meter, uint8_t> &meters, const std:
 
 	const unsigned cols(COLS);
 	xassert(cols > 1, "Screen too narrow");
+
 	const unsigned lineLength(cols - 1);
+	xassert(totalLength <= lineLength, "Total length %u exceeds line length %u, this shouldn't happen", totalLength, lineLength);
+
 	const unsigned bargraphLength((lineLength - totalLength) / meters.size());
 
 	std::string metersString(prefix);

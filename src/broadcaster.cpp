@@ -76,7 +76,7 @@ Broadcaster::Broadcaster(const std::string &host, const std::string &port)
 		}
 	}
 
-	xassert(xfd, "Could not create any socket");
+	xassert(xfd >= 0, "Could not create any socket");
 	fd.reset(xfd);
 	xassert(p, "p is null but shouldn't be");
 	xassert(p->ai_addr, "ai_addr is not set");

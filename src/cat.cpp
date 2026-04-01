@@ -110,9 +110,8 @@ std::vector<std::string> Cat::tokenizeRecvq()
 std::vector<CatEvt> Cat::read()
 {
 	char buf[1024];
-	const ssize_t rs(::read(fd, buf, sizeof(buf)));
-	xassert(rs >= 0, "read(): %m");
-	xassert(rs != 0, "CAT EOF (radio disconnected? RF interference?)");
+	const ssize_t rs(saferead(fd, buf, sizeof(buf)));
+	xassert(rs, "CAT EOF (radio disconnected? RF interference?)");
 	std::copy(buf, buf + rs, std::back_inserter(recvq));
 	std::vector<std::string> catResponses(tokenizeRecvq());
 
@@ -259,6 +258,38 @@ void Cat::send(const char *fmt, ...)
 	const std::string s(std::string(p) + ";");
 	free(p);
 
-	const size_t rs(write(fd, s.data(), s.size()));
-	xassert(rs == s.size(), "CAT write error: %zd, %m", rs);
+	const ssize_t rs(safewrite(fd, s.data(), s.size()));
+	xassert(rs == (ssize_t) s.size(), "CAT write error: %zd, %m", rs);
+}
+
+size_t Cat::saferead(int fd, void *buf, size_t count)
+{
+	ssize_t rs;
+	for(;;) {
+		rs = ::read(fd, buf, count);
+		if(rs == -1 && (errno == EAGAIN || errno == EINTR)) {
+			continue;
+		}
+
+		break;
+	}
+
+	xassert(rs >= 0, "read(): rs=%zd, %m", rs);
+	return rs;
+}
+
+size_t Cat::safewrite(int fd, const void *buf, size_t count)
+{
+	ssize_t rs;
+	for(;;) {
+		rs = write(fd, buf, count);
+		if(rs == -1 && (errno == EAGAIN || errno == EINTR)) {
+			continue;
+		}
+
+		break;
+	}
+
+	xassert(rs > 0, "write(): rs=%zd, %m", rs);
+	return (size_t) rs;
 }

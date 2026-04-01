@@ -57,4 +57,7 @@ private:
 	void gotEvent(CatEvt::EventType event);
 	void send(const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 	std::vector<std::string> tokenizeRecvq();
+
+	static size_t saferead(int fd, void *buf, size_t count);
+	static size_t safewrite(int fd, const void *buf, size_t count);
 };

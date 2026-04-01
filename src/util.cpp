@@ -61,6 +61,8 @@ std::vector<std::string> util::tokenize(const std::string &s, const std::string 
 
 std::set<int> util::watch(const std::set<int> &in, int timeout)
 {
+	// TODO rewrite to use poll(), it's more elegant
+
 	fd_set rfd;
 	FD_ZERO(&rfd);
 

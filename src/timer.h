@@ -2,6 +2,7 @@
 
 #include <thread>
 #include <cinttypes>
+#include <atomic>
 #include "socketpair.h"
 
 class Timer {
@@ -18,7 +19,7 @@ public:
 
 private:
 	SocketPair sp;
-	volatile uint32_t interval;
+	std::atomic<uint32_t> interval;
 	std::thread thread;
 
 	void sendCommand(uint8_t cmd);

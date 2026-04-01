@@ -64,6 +64,7 @@ bool Logger::checkIfExists(Ui *ui, const std::string &call, bool exactMatch) con
 	for(;;) {
 		char buf[1024];
 		fgets(buf, sizeof(buf), fp);
+		xassert(!ferror(fp), "Error reading log file: %m");
 		if(feof(fp)) {
 			break;
 		}

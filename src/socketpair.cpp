@@ -37,10 +37,9 @@ void SocketPair::close1()
 
 void SocketPair::doClose(int which)
 {
-	mutex.lock();
+	std::lock_guard<std::mutex> lg(mutex);
 	if(sv[which] != -1) {
 		close(sv[which]);
 		sv[which] = -1;
 	}
-	mutex.unlock();
 }
