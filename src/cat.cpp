@@ -19,6 +19,7 @@ static const std::map<meters::Meter, uint8_t> meterMap = {
 static const std::map<Band, uint8_t> bandMap = {
     {BAND_160, 0x00},
     {BAND_80, 0x01},
+    {BAND_60, 0x02},
     {BAND_40, 0x03},
     {BAND_30, 0x04},
     {BAND_20, 0x05},

@@ -27,7 +27,9 @@ public:
 		EVT_FREQ_DOWN_NORM,  /* down */
 		EVT_FREQ_DOWN_FAST,  /* pgdn */
 		EVT_FREQ_DOWN_XFAST, /* end */
-		EVT_FREQ_RESET,      /* = */
+		EVT_FREQ_MIN,        /* bksp */
+		EVT_FREQ_MAX,        /* = */
+		EVT_FREQ_BEACON,     /* B */
 		EVT_BAND,            /* b */
 		EVT_MODE,            /* m */
 		EVT_SWAP,            /* v */

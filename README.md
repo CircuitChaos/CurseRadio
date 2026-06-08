@@ -213,6 +213,7 @@ Lots of things, because the program is in the very early phase.
 * Consider removing the 1 Hz part from the frequency when tuning (maybe as an option) – so if the frequency is, say, 14123.456 kHz, and left arrow is pressed, it's now changed to 14123.446 kHz, but maybe should be changed to 14123.440 kHz
 * Add frequency presets, or at least one default frequency (set from CLI)
 * Automatically switch modes (CW / SSB) when moving between ranges (as an option)
+* Add support for FM repeaters (with subtone, shift, etc.), might be useful on 6m
 
 ### Logging
 
@@ -253,7 +254,7 @@ Lots of things, because the program is in the very early phase.
 * If certain things are turned off (like logging or CAT), disallow commands earlier (for example, right now you can run the program without radio connected, enter mode selection screen, select mode, and only then you get an error)
 * If '=' is pressed when outside of band, it shouldn't do anything
 * Show shortened band plan when switching bands and/or modes
-* '=' goes to the beginning of the band, add key to go to the end
+* Add scrolling, especially as help got quite long
 
 ### Radio control and CAT
 

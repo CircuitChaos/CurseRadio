@@ -5,6 +5,7 @@
 enum Band {
 	BAND_160,
 	BAND_80,
+	BAND_60,
 	BAND_40,
 	BAND_30,
 	BAND_20,
@@ -21,6 +22,7 @@ namespace band {
 
 uint32_t getMinByBand(Band band);
 uint32_t getMaxByBand(Band band);
+uint32_t getBeaconByBand(Band band);
 Band getBandByFreq(uint32_t freq);
 
 } // namespace band

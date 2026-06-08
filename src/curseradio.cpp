@@ -126,7 +126,9 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 		case UiEvt::EVT_FREQ_DOWN_NORM:
 		case UiEvt::EVT_FREQ_DOWN_FAST:
 		case UiEvt::EVT_FREQ_DOWN_XFAST:
-		case UiEvt::EVT_FREQ_RESET: {
+		case UiEvt::EVT_FREQ_MIN:
+		case UiEvt::EVT_FREQ_MAX:
+		case UiEvt::EVT_FREQ_BEACON: {
 			if(!cat) {
 				ui.print("CAT disabled");
 				break;
@@ -174,8 +176,16 @@ bool CurseRadio::uiEvt(const UiEvt &evt)
 					increment = -TUNE_INCREMENT_XFAST;
 					break;
 
-				case UiEvt::EVT_FREQ_RESET:
+				case UiEvt::EVT_FREQ_MIN:
 					newFreq = band::getMinByBand(band);
+					break;
+
+				case UiEvt::EVT_FREQ_MAX:
+					newFreq = band::getMaxByBand(band);
+					break;
+
+				case UiEvt::EVT_FREQ_BEACON:
+					newFreq = band::getBeaconByBand(band);
 					break;
 
 				default:

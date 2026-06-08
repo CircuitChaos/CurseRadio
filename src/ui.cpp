@@ -226,8 +226,14 @@ UiEvt Ui::readCmd(int ch)
 		case KEY_END:
 			return UiEvt::EVT_FREQ_DOWN_XFAST;
 
+		case 0x08:
+			return UiEvt::EVT_FREQ_MIN;
+
 		case '=':
-			return UiEvt::EVT_FREQ_RESET;
+			return UiEvt::EVT_FREQ_MAX;
+
+		case 'B':
+			return UiEvt::EVT_FREQ_BEACON;
 
 		case 'b':
 			setState(STATE_BAND);
@@ -305,8 +311,9 @@ UiEvt Ui::readBand(int ch)
 	setState(STATE_CMD);
 
 	static const std::map<int, std::pair<std::string, Band> > bands = {
-	    {'1', {"160 m", BAND_160}},
-	    {'2', {"80 m", BAND_80}},
+	    {'t', {"160 m", BAND_160}},
+	    {'1', {"80 m", BAND_80}},
+	    {'2', {"60 m", BAND_60}},
 	    {'3', {"40 m", BAND_40}},
 	    {'4', {"30 m", BAND_30}},
 	    {'5', {"20 m", BAND_20}},
@@ -315,8 +322,6 @@ UiEvt Ui::readBand(int ch)
 	    {'8', {"12 m", BAND_12}},
 	    {'9', {"10 m", BAND_10}},
 	    {'0', {"6 m", BAND_6}},
-	    {'g', {"generic", BAND_GEN}},
-	    {'m', {"MW", BAND_MW}},
 	};
 
 	if(ch == 0x08) {
@@ -470,7 +475,8 @@ void Ui::help()
 	    "  up / down: normal tuning\n"
 	    "  pgup / pgdn: fast tuning\n"
 	    "  home / end: extra fast tuning\n"
-	    "  =: reset frequency\n"
+	    "  bksp / =: go to beginning or end of the band\n"
+	    "  B: tune to the \"beacon\" (FT8 frequency) on the band\n"
 	    "  b: select band\n"
 	    "  m: select mode\n"
 	    "  f: select fan mode (normal / contest)\n"
@@ -513,6 +519,7 @@ void Ui::setState(State newState)
 			static const std::vector<std::pair<Band, unsigned> > bands = {
 			    {BAND_160, 160},
 			    {BAND_80, 80},
+			    {BAND_60, 60},
 			    {BAND_40, 40},
 			    {BAND_30, 30},
 			    {BAND_20, 20},
@@ -524,14 +531,12 @@ void Ui::setState(State newState)
 			};
 
 			for(size_t i(0); i < bands.size(); ++i) {
-				print("  %u: %u m (%u - %u kHz)",
-				    (i + 1) % 10,
+				print("  %c: %u m (%u - %u kHz)",
+				    (i == 0) ? 't' : (i % 10 + '0'),
 				    bands[i].second,
 				    band::getMinByBand(bands[i].first) / 1000,
 				    band::getMaxByBand(bands[i].first) / 1000);
 			}
-			print("  g: generic");
-			print("  m: MW");
 			print("  bksp: abort selection");
 			leaveBlock();
 			break;
