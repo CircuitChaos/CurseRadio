@@ -255,6 +255,7 @@ Lots of things, because the program is in the very early phase.
 * If '=' is pressed when outside of band, it shouldn't do anything
 * Show shortened band plan when switching bands and/or modes
 * Add scrolling, especially as help got quite long
+* Prefix each line in UI with current time
 
 ### Radio control and CAT
 
@@ -282,6 +283,7 @@ Lots of things, because the program is in the very early phase.
 * Add some license
 * Add undo option
 * Document UDP broadcast sender as it's part of a bigger solution
+* Move certain CLI options that rarely change from CLI to a config file
 
 ## Safety and license
 
